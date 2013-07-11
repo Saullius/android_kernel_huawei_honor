@@ -151,15 +151,15 @@ dhd_common_init(void)
 	 */
     if(strcmp(devmode,"ap") == 0)
     {
-	strcpy(fw_path,  HUAWEI_WIFI_LOAD_PATH "firmware_apsta.bin");
+	strcpy(fw_path,  HUAWEI_WIFI_LOAD_PATH "fw_bcm4329_apsta.bin");
     }
-    else if(strcmp(devmode,"test") == 0)
+    else if(strcmp(devmode,"abg") == 0)
     {
-	strcpy(fw_path,  HUAWEI_WIFI_LOAD_PATH "firmware_test.bin");
+	strcpy(fw_path,  HUAWEI_WIFI_LOAD_PATH "fw_bcm4329_abg.bin");
     }
     else
     {
-	strcpy(fw_path,  HUAWEI_WIFI_LOAD_PATH "firmware.bin");
+	strcpy(fw_path,  HUAWEI_WIFI_LOAD_PATH "fw_bcm4329.bin");
     }
 
     DHD_ERROR(("%s:fw_path = %s \n", __FUNCTION__,fw_path));
