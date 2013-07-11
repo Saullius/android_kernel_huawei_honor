@@ -86,6 +86,15 @@ static bcmsdh_hc_t *sdhcinfo = NULL;
 /* driver info, initialized when bcmsdh_register is called */
 static bcmsdh_driver_t drvinfo = {NULL, NULL};
 
+
+#include <asm/mach-types.h>
+#include <linux/hardware_self_adapt.h>
+#define CUSTOM_OOB_GPIO_NUM_EXTRA 128
+int oob_irq_extra;
+bool is_u8800_51_ver_c = FALSE;
+extern int dhd_oob_gpio_num;
+extern int wifi_set_carddetect(int);
+
 /* debugging macros */
 #define SDLX_MSG(x)
 
@@ -198,6 +207,25 @@ int bcmsdh_probe(struct device *dev)
 	 irq_flags = IRQF_TRIGGER_FALLING;
 #endif /* HW_OOB */
 	irq = dhd_customer_oob_irq_map(&irq_flags);
+	if ((machine_is_msm7x30_u8820()&&(HW_VER_SUB_VC == (hw_ver_sub_type)wifi_set_carddetect(0))) ||\
+	 	(machine_is_msm7x30_u8800_51()&&(HW_VER_SUB_VA == (hw_ver_sub_type)wifi_set_carddetect(0))) ||\
+		(machine_is_msm7x30_u8800_51()&&(HW_VER_SUB_VB == (hw_ver_sub_type)wifi_set_carddetect(0))) )
+	{
+		printk("\n%s: old hardware and GPIO \n", __FUNCTION__);
+		irq = MSM_GPIO_TO_INT(CUSTOM_OOB_GPIO_NUM_EXTRA);
+		
+	}else if(machine_is_msm7x30_u8800_51()&&(HW_VER_SUB_VC == (hw_ver_sub_type)wifi_set_carddetect(0)) )
+	{
+
+		printk("\n%s: this borad is u8800-51 ver C, both GPIO %d and EXTRA used as oob \n", __FUNCTION__,dhd_oob_gpio_num);
+		is_u8800_51_ver_c = TRUE;
+		oob_irq_extra = MSM_GPIO_TO_INT(CUSTOM_OOB_GPIO_NUM_EXTRA);
+
+	}else
+	{
+		printk("\n%s: new hardware use GPIO %d as oob \n", __FUNCTION__,dhd_oob_gpio_num);
+	}
+
 	if  (irq < 0) {
 		SDLX_MSG(("%s: Host irq is not defined\n", __FUNCTION__));
 		return 1;
@@ -301,7 +329,7 @@ int bcmsdh_remove(struct device *dev)
 	MFREE(osh, sdhc, sizeof(bcmsdh_hc_t));
 	osl_detach(osh);
 
-#if !defined(BCMLXSDMMC) || defined(OOB_INTR_ONLY)
+#if !defined(BCMLXSDMMC)
 	dev_set_drvdata(dev, NULL);
 #endif /* !defined(BCMLXSDMMC) */
 
@@ -345,18 +373,18 @@ static struct pci_driver bcmsdh_pci_driver = {
 #endif
 	suspend:	NULL,
 	resume:		NULL,
-};
+	};
 
 
 extern uint sd_pci_slot;	/* Force detection to a particular PCI */
-				/* slot only . Allows for having multiple */
-				/* WL devices at once in a PC */
-				/* Only one instance of dhd will be */
-				/* usable at a time */
-				/* Upper word is bus number, */
-				/* lower word is slot number */
-				/* Default value of 0xFFFFffff turns this */
-				/* off */
+							/* slot only . Allows for having multiple */
+							/* WL devices at once in a PC */
+							/* Only one instance of dhd will be */
+							/* usable at a time */
+							/* Upper word is bus number, */
+							/* lower word is slot number */
+							/* Default value of 0xFFFFffff turns this */
+							/* off */
 module_param(sd_pci_slot, uint, 0);
 
 
@@ -385,7 +413,7 @@ bcmsdh_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 			          "Probing unknown device",
 			          pdev->bus->number, PCI_SLOT(pdev->devfn),
 			          pdev->vendor, pdev->device));
-			return -ENODEV;
+			          return -ENODEV;
 		}
 		SDLX_MSG(("%s: %s: bus %X, slot %X, vendor %X, device %X (good PCI location)\n",
 		          __FUNCTION__,
@@ -593,11 +621,16 @@ void bcmsdh_oob_intr_set(bool enable)
 			enable_irq(sdhcinfo->oob_irq);
 		else
 			disable_irq_nosync(sdhcinfo->oob_irq);
+		if(is_u8800_51_ver_c == TRUE){
+			if (enable)
+				enable_irq(oob_irq_extra);
+			else
+				disable_irq_nosync(oob_irq_extra);
+		}
 		curstate = enable;
 	}
 	spin_unlock_irqrestore(&sdhcinfo->irq_lock, flags);
 }
-
 static irqreturn_t wlan_oob_irq(int irq, void *dev_id)
 {
 	dhd_pub_t *dhdp;
@@ -610,6 +643,8 @@ static irqreturn_t wlan_oob_irq(int irq, void *dev_id)
 		SDLX_MSG(("Out of band GPIO interrupt fired way too early\n"));
 		return IRQ_HANDLED;
 	}
+
+	WAKE_LOCK_TIMEOUT(dhdp, WAKE_LOCK_TMOUT, 25);
 
 	dhdsdio_isr((void *)dhdp->bus);
 
@@ -636,37 +671,41 @@ int bcmsdh_register_oob_intr(void * dhdp)
 		if (error)
 			return -ENODEV;
 
-		enable_irq_wake(sdhcinfo->oob_irq);
+		irq_set_irq_wake(sdhcinfo->oob_irq, 1);
+
+	if(is_u8800_51_ver_c == TRUE){
+		
+		printk("%s: request_irq for oob_irq_extra\n", __FUNCTION__);
+		error = request_irq(oob_irq_extra, wlan_oob_irq, sdhcinfo->oob_flags,
+			"bcmsdh_sdmmc_extra", NULL);
+		if (error)
+			return -ENODEV;
+
+		irq_set_irq_wake(oob_irq_extra, 1);
+	}
+
 		sdhcinfo->oob_irq_registered = TRUE;
 	}
 
 	return 0;
 }
 
-void bcmsdh_set_irq(int flag)
-{
-	if (sdhcinfo->oob_irq_registered) {
-		SDLX_MSG(("%s Flag = %d", __FUNCTION__, flag));
-		if (flag) {
-			enable_irq(sdhcinfo->oob_irq);
-			enable_irq_wake(sdhcinfo->oob_irq);
-		} else {
-			disable_irq_wake(sdhcinfo->oob_irq);
-			disable_irq(sdhcinfo->oob_irq);
-		}
-	}
-}
-
 void bcmsdh_unregister_oob_intr(void)
 {
 	SDLX_MSG(("%s: Enter\n", __FUNCTION__));
 
-	if (sdhcinfo->oob_irq_registered) {
-		disable_irq_wake(sdhcinfo->oob_irq);
-		disable_irq(sdhcinfo->oob_irq);	/* just in case.. */
-		free_irq(sdhcinfo->oob_irq, NULL);
-		sdhcinfo->oob_irq_registered = FALSE;
+	irq_set_irq_wake(sdhcinfo->oob_irq, 0);
+	disable_irq(sdhcinfo->oob_irq);	/* just in case.. */
+	free_irq(sdhcinfo->oob_irq, NULL);
+
+	if(is_u8800_51_ver_c == TRUE){
+		irq_set_irq_wake(oob_irq_extra, 0);
+		disable_irq(oob_irq_extra);	/* just in case.. */
+		free_irq(oob_irq_extra, NULL);
 	}
+
+	
+	sdhcinfo->oob_irq_registered = FALSE;
 }
 #endif /* defined(OOB_INTR_ONLY) */
 /* Module parameters specific to each host-controller driver */
