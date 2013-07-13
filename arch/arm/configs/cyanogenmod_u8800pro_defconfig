@@ -1,6 +1,6 @@
 #
 # Automatically generated make config: don't edit
-# Linux/arm 3.0.8 Kernel Configuration
+# Linux/arm 3.0.83 Kernel Configuration
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -432,6 +432,7 @@ CONFIG_MULTI_IRQ_HANDLER=y
 # CONFIG_ARM_ERRATA_743622 is not set
 # CONFIG_ARM_ERRATA_754322 is not set
 # CONFIG_KSAPI is not set
+# CONFIG_ARM_ERRATA_775420 is not set
 # CONFIG_FIQ_DEBUGGER is not set
 
 #
@@ -1267,10 +1268,13 @@ CONFIG_WLAN=y
 # CONFIG_USB_NET_RNDIS_WLAN is not set
 CONFIG_LIBRA_SDIOIF=m
 # CONFIG_ATH_COMMON is not set
-CONFIG_BCM4329=m
-CONFIG_BCM4329_FW_PATH="n"
-CONFIG_BCM4329_NVRAM_PATH="n"
-# CONFIG_BCMDHD is not set
+# CONFIG_BCM4329 is not set
+CONFIG_BCMDHD=y
+CONFIG_BCMDHD_FW_PATH="/system/vendor/firmware/fw_bcmdhd.bin"
+CONFIG_BCMDHD_NVRAM_PATH="/system/vendor/firmware/bcmdhd.cal"
+CONFIG_BCMDHD_WIFI_CONTROL_FUNC=y
+CONFIG_BCMDHD_HW_OOB=y
+CONFIG_BCMDHD_ENABLE_P2P=y 
 # CONFIG_HOSTAP is not set
 # CONFIG_IWM is not set
 # CONFIG_LIBERTAS is not set
