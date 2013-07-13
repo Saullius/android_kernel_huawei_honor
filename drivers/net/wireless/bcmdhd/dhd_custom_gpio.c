@@ -67,9 +67,13 @@ extern int sdioh_mmc_irq(int irq);
 
 /* Customer specific Host GPIO defintion  */
 static int dhd_oob_gpio_num = -1;
+static unsigned char mac_param[6];
 
 module_param(dhd_oob_gpio_num, int, 0644);
 MODULE_PARM_DESC(dhd_oob_gpio_num, "DHD oob gpio number");
+
+module_param_array(mac_param,byte, NULL, 0644);
+MODULE_PARM_DESC(mac, "DHD mac address");
 
 /* This function will return:
  *  1) return :  Host gpio interrupt number per customer platform
@@ -180,6 +184,10 @@ dhd_custom_get_mac_address(unsigned char *buf)
 
 	/* Customer access to MAC address stored outside of DHD driver */
 #if defined(CUSTOMER_HW2) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
+	if ((mac_param[0] != 0) || (mac_param[1] != 0)) {
+		bcopy((char *)&mac_param, buf, 6);
+		return ret;
+	}
 	ret = wifi_get_mac_addr(buf);
 #endif
 
