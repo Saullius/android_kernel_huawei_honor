@@ -1,4 +1,4 @@
-if BCMDHD_GOOGLE
+#if BCMDHD_GOOGLE
 
 config BCMDHD
 	tristate "Broadcom 4329/30 wireless cards support"
@@ -15,14 +15,14 @@ config BCMDHD
 config BCMDHD_FW_PATH
 	depends on BCMDHD
 	string "Firmware path"
-	default "/system/etc/firmware/fw_bcmdhd.bin"
+	default "/system/vendor/firmware/fw_bcmdhd.bin"
 	---help---
 	  Path to the firmware file.
 
 config BCMDHD_NVRAM_PATH
 	depends on BCMDHD
 	string "NVRAM path"
-	default "/proc/calibration"
+	default "/system/vendor/firmware/bcmdhd.cal"
 	---help---
 	  Path to the calibration file.
 
@@ -55,4 +55,4 @@ config DHD_ENABLE_P2P
 	---help---
 	  Use Enable Wifi Direct
 
-endif #BCMDHD_GOOGLE
+#endif #BCMDHD_GOOGLE
