@@ -310,6 +310,13 @@ int adreno_ringbuffer_start(struct adreno_ringbuffer *rb, unsigned int init_ram)
 	adreno_regwrite(device, REG_SCRATCH_UMSK,
 			     GSL_RB_MEMPTRS_SCRATCH_MASK);
 
+    /*< DTS2012042406822 hanfeng 20120428 begin*/
+	/* update the eoptimestamp field with the last retired timestamp */
+	kgsl_sharedmem_writel(&device->memstore,
+			     KGSL_DEVICE_MEMSTORE_OFFSET(eoptimestamp),
+			     rb->timestamp);
+    /* DTS2012042406822 hanfeng 20120428 end > */
+
 	/* load the CP ucode */
 
 	status = adreno_ringbuffer_load_pm4_ucode(device);

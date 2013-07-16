@@ -980,6 +980,16 @@ NORET_TYPE void do_exit(long code)
 	if (unlikely(tsk->audit_context))
 		audit_free(tsk);
 
+    /* <DTS2010071902568 hufeng 20100719 begin */
+	/*<BU5D08740 qinwei 20100426 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+	if( code != 0 ){
+		printk("%s: exit code=%lu\n", __func__, code);
+	}
+#endif
+	/*BU5D08740 qinwei 20100426 end >*/
+    /* DTS2010071902568 hufeng 20100719 end> */
+
 	tsk->exit_code = code;
 	taskstats_exit(tsk, group_dead);
 

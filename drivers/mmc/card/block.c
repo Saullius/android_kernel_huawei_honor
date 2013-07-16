@@ -43,6 +43,11 @@
 
 #include <asm/system.h>
 #include <asm/uaccess.h>
+/* <DTS2010080901139 hufeng 20100821 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+#include <linux/mmc/mmc_panic.h>
+#endif
+/* DTS2010080901139 hufeng 20100821 end> */
 
 #include "queue.h"
 
@@ -1452,6 +1457,15 @@ static int mmc_blk_probe(struct mmc_card *card)
 		if (mmc_add_disk(part_md))
 			goto out;
 	}
+
+/*< DTS2012011904543 lijianzhao 20120119 begin */
+/* <DTS2010080901139 hufeng 20100821 begin */
+#if 0
+    if (!strcmp(md->disk->disk_name, "mmcblk0"))
+        mmc_panic_save_card(card);
+#endif
+/* DTS2010080901139 hufeng 20100821 end> */
+/* DTS2012011904543 lijianzhao 20120119 end >*/
 	return 0;
 
  out:

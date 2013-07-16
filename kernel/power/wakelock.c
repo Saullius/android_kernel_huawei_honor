@@ -137,10 +137,23 @@ static int wakelock_stats_show(struct seq_file *m, void *unused)
 			"\ttotal_time\tsleep_time\tmax_time\tlast_change\n");
 	list_for_each_entry(lock, &inactive_locks, link)
 		ret = print_lock_stat(m, lock);
+
+/* <DTS2010092703937 hufeng 20100927 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+        ret = seq_printf(m,"!\n!\n!\n");        /* for kernel32 -wanghao */
+
+    for (type = 0; type < WAKE_LOCK_TYPE_COUNT; type++) {
+        list_for_each_entry(lock, &active_wake_locks[type], link)
+            ret = print_lock_stat(m, lock);
+            ret = seq_printf(m,"!\n!\n!\n");    /* for kernel32 -wanghao */
+    }
+#else
 	for (type = 0; type < WAKE_LOCK_TYPE_COUNT; type++) {
 		list_for_each_entry(lock, &active_wake_locks[type], link)
 			ret = print_lock_stat(m, lock);
 	}
+#endif
+/* DTS2010092703937 hufeng 20100927 end> */
 	spin_unlock_irqrestore(&list_lock, irqflags);
 	return 0;
 }
@@ -319,8 +332,21 @@ int suspend_sys_sync_wait(void)
 	if (suspend_sys_sync_count != 0) {
 		mod_timer(&suspend_sys_sync_timer, jiffies +
 				SUSPEND_SYS_SYNC_TIMEOUT);
+    /* < DTS2011111900783 hujun 20111119 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+        printk("HUAWEI suspend: suspend_sys_sync_done false, need to wait\n");
+#endif
+    /* DTS2011111900783 hujun 20111119 end > */
 		wait_for_completion(&suspend_sys_sync_comp);
 	}
+    /* < DTS2011111900783 hujun 20111119 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+    else
+    {
+        printk("HUAWEI suspend: suspend_sys_sync_done\n");
+    }
+#endif
+    /* DTS2011111900783 hujun 20111119 end > */
 	if (suspend_sys_sync_abort) {
 		pr_info("suspend aborted....while waiting for sys_sync\n");
 		return -EAGAIN;

@@ -775,6 +775,67 @@ int __init msm_add_sdcc(unsigned int controller, struct mmc_platform_data *plat)
 	pdev->dev.platform_data = plat;
 	return platform_device_register(pdev);
 }
+/* <BU5D08126 duangan 2010-4-24 begin */
+#ifdef CONFIG_HUAWEI_FEATURE_OEMINFO
+static struct resource rmt_oeminfo_resources[] = {
+       {
+		.flags  = IORESOURCE_MEM,
+       },
+};
+
+static struct platform_device rmt_oeminfo_device = {
+       .name           = "rmt_oeminfo",
+       .id             = -1,
+       .num_resources  = ARRAY_SIZE(rmt_oeminfo_resources),
+       .resource       = rmt_oeminfo_resources,
+};
+
+int __init rmt_oeminfo_add_device(void)
+{
+  platform_device_register(&rmt_oeminfo_device);
+  return 0;
+}
+#endif
+/* BU5D08126 duangan 2010-4-24 end> */
+
+/* <DTS2010092002892 duangan 20100926 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+static struct resource hw_extern_sdcard_resources[] = {
+       {
+		.flags  = IORESOURCE_MEM,
+       },
+};
+
+static struct platform_device hw_extern_sdcard_device = {
+       .name           = "hw_extern_sdcard",
+       .id             = -1,
+       .num_resources  = ARRAY_SIZE(hw_extern_sdcard_resources),
+       .resource       = hw_extern_sdcard_resources,
+};
+/* <DTS2011062802725 zhengzhechu 20110630 begin */
+static struct resource hw_extern_sdcardMounted_resources[] = {
+       {
+		.flags  = IORESOURCE_MEM,
+       },
+};
+
+static struct platform_device hw_extern_sdcardMounted_device = {
+       .name           = "hw_extern_sdcardMounted",
+       .id             = -1,
+       .num_resources  = ARRAY_SIZE(hw_extern_sdcardMounted_resources),
+       .resource       = hw_extern_sdcardMounted_resources,
+};
+/* DTS2011062802725 zhengzhechu 20110630 end> */
+int __init hw_extern_sdcard_add_device(void)
+{
+  platform_device_register(&hw_extern_sdcard_device);
+/* <DTS2011062802725 zhengzhechu 20110630 begin */  
+  platform_device_register(&hw_extern_sdcardMounted_device);
+/* DTS2011062802725 zhengzhechu 20110630 end> */
+  return 0;
+}
+#endif
+/* DTS2010092002892 duangan 20100926 end> */
 
 static struct resource msm_vidc_720p_resources[] = {
 	{

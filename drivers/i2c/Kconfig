@@ -86,6 +86,22 @@ config I2C_SMBUS
 
 source drivers/i2c/algos/Kconfig
 source drivers/i2c/busses/Kconfig
+#/* < DTS2011042801270 yuezenglong 20110428 begin */
+source drivers/i2c/gyroscope/Kconfig
+#/* DTS2011042801270 yuezenglong 20110428 end > */
+
+#/*< DTS2011041700393 lijianzhao 20110417 begin */
+#modify for 4125 baseline
+source drivers/i2c/chips/Kconfig
+#/* DTS2011041700393 lijianzhao 20110417 end >*/
+
+#/*< DTS2012021003176 yanzhijun 20120210 begin */
+# merge DTS2011110800980 fangxinyong  
+config HUAWEI_I2C_DEBUG_TOOL
+	bool "I2C debug tools"
+	help
+	  used to debug i2c devices, example camera touch etc.. 
+#/* DTS2012021003176 yanzhijun 20120210 end >*/ 
 
 config I2C_DEBUG_CORE
 	bool "I2C Core debugging messages"

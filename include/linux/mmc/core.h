@@ -133,6 +133,14 @@ struct mmc_host;
 struct mmc_card;
 
 extern void mmc_wait_for_req(struct mmc_host *, struct mmc_request *);
+/* <DTS2010080901139 hufeng 20100821 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+extern void mmc_panic_start_req(struct mmc_host *host, struct mmc_request *mrq);
+extern int mmc_panic_wait_for_cmd(struct mmc_host *host, struct mmc_command *cmd, int retries);
+extern int mmc_panic_write(u8* buffer, unsigned log_len);
+#endif
+/* DTS2010080901139 hufeng 20100821 end> */
+
 extern int mmc_wait_for_cmd(struct mmc_host *, struct mmc_command *, int);
 extern int mmc_app_cmd(struct mmc_host *, struct mmc_card *);
 extern int mmc_wait_for_app_cmd(struct mmc_host *, struct mmc_card *,
@@ -167,6 +175,13 @@ extern void mmc_do_release_host(struct mmc_host *host);
 extern int mmc_try_claim_host(struct mmc_host *host);
 
 extern int mmc_detect_card_removed(struct mmc_host *host);
+
+/* < DTS2012011302816  hujun 20120113 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+extern int mmc_schedule_delayed_work(struct delayed_work *work,
+				     unsigned long delay);
+#endif
+/* DTS2012011302816  hujun 20120113 end > */
 
 /**
  *	mmc_claim_host - exclusively claim a host

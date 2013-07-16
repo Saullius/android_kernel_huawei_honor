@@ -58,6 +58,12 @@
 #include <asm/unaligned.h>
 
 
+/* < DTS2012041702049 chenxi 20120417 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+#include <asm-arm/huawei/usb_switch_huawei.h>
+#endif
+/* DTS2012041702049 chenxi 20120417 end > */
+
 /*
  * Thanks to NetChip Technologies for donating this product ID.
  *
@@ -816,7 +822,22 @@ static ssize_t fsg_store_file(struct device *dev, struct device_attribute *attr,
 	struct rw_semaphore	*filesem = dev_get_drvdata(dev);
 	int		rc = 0;
 
-
+    /* < DTS2012041702049 chenxi 20120417 begin */    
+#ifdef CONFIG_HUAWEI_KERNEL
+    USB_PR("%s: buf=%s\n", __func__, buf);
+    
+    /* if the unshare command comes later than the port switch, the cdrom lunfile will be cleared.
+     * so ignore the lunfile clearing in normal mode.
+     */
+    if((CDROM_INDEX == usb_para_data.usb_para.usb_pid_index)&&(0 == *buf))
+    {
+        
+        USB_PR("%s: normal mode, ignore the clearing of lunfile\n", __func__);
+        return count;
+    }
+#endif
+    /* DTS2012041702049 chenxi 20120417 end > */
+    
 #ifndef CONFIG_USB_ANDROID_MASS_STORAGE
 	/* disabled in android because we need to allow closing the backing file
 	 * if the media was removed

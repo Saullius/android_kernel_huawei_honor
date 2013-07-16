@@ -43,7 +43,11 @@ int mdp4_atv_on(struct platform_device *pdev)
 	struct msm_fb_data_type *mfd;
 	struct mdp4_overlay_pipe *pipe;
 	int ret;
-
+/*< DTS2010121101497 lijianzhao 20101211 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+	static boolean first_time = TRUE;
+#endif
+/* DTS2010121101497 lijianzhao 20101211 end >*/
 	mfd = (struct msm_fb_data_type *)platform_get_drvdata(pdev);
 
 	if (!mfd)
@@ -108,7 +112,18 @@ int mdp4_atv_on(struct platform_device *pdev)
 	mdp4_mixer_stage_up(pipe);
 
 	mdp4_overlayproc_cfg(pipe);
-
+/*< DTS2010121101497 lijianzhao 20101211 begin */
+/* config it once for tv_out */
+#ifdef CONFIG_HUAWEI_KERNEL	
+	if(first_time)
+	{
+		mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_ON, FALSE);
+		outpdw(MDP_BASE + 0x18000, 0x20);
+		mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_OFF, FALSE);
+		first_time = FALSE;
+	}
+#endif
+/* DTS2010121101497 lijianzhao 20101211 end >*/
 	if (ret == 0)
 		mdp_pipe_ctrl(MDP_OVERLAY1_BLOCK, MDP_BLOCK_POWER_ON, FALSE);
 

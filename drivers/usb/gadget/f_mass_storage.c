@@ -312,6 +312,13 @@ static const char fsg_string_interface[] = "Mass Storage";
 
 #include "storage_common.c"
 
+/* < DTS2012022400909 chenxi 20120224 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+static int nluns = USB_MAX_LUNS;
+static int cdrom_index = 0;
+#endif
+/* DTS2012022400909 chenxi 20120224 end > */
+
 #ifdef CONFIG_USB_CSW_HACK
 static int write_error_after_csw_sent;
 static int csw_hack_sent;
@@ -570,6 +577,23 @@ static void bulk_in_complete(struct usb_ep *ep, struct usb_request *req)
 	struct fsg_common	*common = ep->driver_data;
 	struct fsg_buffhd	*bh = req->context;
 
+    /* < DTS2012040606618 yanzhijun 20120407 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+    if (!common)
+    {
+        if (req->status == -ECONNRESET)		/* Request was cancelled */
+		usb_ep_fifo_flush(ep);
+
+	    /* Hold the lock while we update the request and buffer states */
+	    smp_wmb();
+	    bh->inreq_busy = 0;
+	    bh->state = BUF_STATE_EMPTY;
+        WARN(1, "%s common is NULL, ignore it\n", __func__);
+        return;
+    }
+#endif
+    /* DTS2012040606618 yanzhijun 20120407 end > */ 
+    
 	if (req->status || req->actual != req->length)
 		DBG(common, "%s --> %d, %u/%u\n", __func__,
 		    req->status, req->actual, req->length);
@@ -589,6 +613,23 @@ static void bulk_out_complete(struct usb_ep *ep, struct usb_request *req)
 {
 	struct fsg_common	*common = ep->driver_data;
 	struct fsg_buffhd	*bh = req->context;
+
+    /* < DTS2012040606618 yanzhijun 20120407 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+    if (!common)
+    {
+        if (req->status == -ECONNRESET)		/* Request was cancelled */
+		usb_ep_fifo_flush(ep);
+
+	    /* Hold the lock while we update the request and buffer states */
+	    smp_wmb();
+	    bh->outreq_busy = 0;
+	    bh->state = BUF_STATE_FULL;
+        WARN(1, "%s common is NULL, ignore it\n", __func__);
+        return;
+    }
+#endif
+    /* DTS2012040606618 yanzhijun 20120407 end > */
 
 	dump_msg(common, "bulk-out", req->buf, req->actual);
 	if (req->status || req->actual != bh->bulk_out_intended_length)
@@ -646,8 +687,15 @@ static int fsg_setup(struct usb_function *f,
 			break;
 		if (w_value != 0)
 			return -EDOM;
+        /* < DTS2012022400909 chenxi 20120224 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+        VDBG(fsg, "get max LUN=%d\n", nluns);
+        *(u8 *) req->buf = nluns - 1;
+#else
 		VDBG(fsg, "get max LUN\n");
 		*(u8 *)req->buf = fsg->common->nluns - 1;
+#endif
+        /* DTS2012022400909 chenxi 20120224 end > */
 
 		/* Respond with data/status */
 		req->length = min((u16)1, w_length);
@@ -1277,7 +1325,12 @@ static int do_inquiry(struct fsg_common *common, struct fsg_buffhd *bh)
 		buf[4] = 31;		/* Additional length */
 		return 36;
 	}
-
+	
+    /* < DTS2012022400909 chenxi 20120224 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+    curlun->cdrom = (common->lun == cdrom_index)? 1 : 0;
+#endif
+    /* DTS2012022400909 chenxi 20120224 end > */
 	buf[0] = curlun->cdrom ? TYPE_ROM : TYPE_DISK;
 	buf[1] = curlun->removable ? 0x80 : 0;
 	buf[2] = 2;		/* ANSI SCSI level 2 */
@@ -1384,6 +1437,9 @@ static int do_read_header(struct fsg_common *common, struct fsg_buffhd *bh)
 	return 8;
 }
 
+/*< DTS2012011801998 chenxi 20120203 begin */
+/* import DTS2011082403937 to support cdrom in mac system */
+#ifndef CONFIG_HUAWEI_KERNEL
 static int do_read_toc(struct fsg_common *common, struct fsg_buffhd *bh)
 {
 	struct fsg_lun	*curlun = common->curlun;
@@ -1410,6 +1466,120 @@ static int do_read_toc(struct fsg_common *common, struct fsg_buffhd *bh)
 	store_cdrom_address(&buf[16], msf, curlun->num_sectors);
 	return 20;
 }
+#else
+/* usbsdms_read_toc_data1 rsp packet */
+static u8 usbsdms_read_toc_data1[] = 
+{
+    0x00,0x0A,0x01,0x01,
+    0x00,0x14,0x01,0x00,0x00,0x00,0x02,0x00
+};
+
+/* usbsdms_read_toc_data1_format0000 rsp packet */
+static  u8 usbsdms_read_toc_data1_format0000[] = 
+{
+    0x00,0x12,0x01,0x01,
+    0x00,0x14,0x01,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x14,0xAA,0x00,0x00,0x00,0xFF,0xFF /* the last four bytes:32MB */
+};
+
+/* usbsdms_read_toc_data1_format0001 rsp packet */
+static u8 usbsdms_read_toc_data1_format0001[] = 
+{
+    0x00,0x0A,0x01,0x01,
+    0x00,0x14,0x01,0x00,0x00,0x00,0x00,0x00
+};
+
+/* usbsdms_read_toc_data2 rsp packet */
+static u8 usbsdms_read_toc_data2[] = 
+{
+    0x00,0x2e,0x01,0x01,
+    0x01,0x14,0x00,0xa0,0x00,0x00,0x00,0x00,0x01,0x00,0x00,
+    0x01,0x14,0x00,0xa1,0x00,0x00,0x00,0x00,0x01,0x00,0x00,
+    0x01,0x14,0x00,0xa2,0x00,0x00,0x00,0x00,0x06,0x00,0x3c,
+                                         /* ^ CDROM size from this byte */
+    0x01,0x14,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x02,0x00
+};
+
+/* usbsdms_read_toc_data3 rsp packet */
+static u8 usbsdms_read_toc_data3[] = 
+{
+    0x00,0x12,0x01,0x01,
+    0x00,0x14,0x01,0x00,0x00,0x00,0x02,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+};
+
+/* ------------------------------------------------------------
+ * function      : static int do_read_toc(struct fsg_dev *fsg, struct fsg_buffhd *bh)
+ * description   : response for command READ TOC
+ * input         : struct fsg_dev *fsg, struct fsg_buffhd *bh
+ * output        : none
+ * return        : response data length
+ * -------------------------------------------------------------
+ */
+static int do_read_toc(struct fsg_common *common, struct fsg_buffhd *bh)
+{
+    u8    *buf = (u8 *) bh->buf;
+    usbsdms_read_toc_cmd_type *read_toc_cmd = NULL;
+    unsigned long response_length = 0;
+    u8 *response_ptr = NULL;
+
+    read_toc_cmd = (usbsdms_read_toc_cmd_type *)common->cmnd;
+        
+    /* When TIME is set to one, the address fields in some returned 
+     * data formats shall be in TIME form. 
+	 * 2 is time form mask.
+     */
+    if ( 2 == read_toc_cmd->msf )
+    {
+        response_ptr = usbsdms_read_toc_data2;
+        response_length = sizeof(usbsdms_read_toc_data2);
+    }
+    else if(0 != read_toc_cmd->allocation_length_msb)
+    {
+        response_ptr = usbsdms_read_toc_data3;
+        response_length = sizeof(usbsdms_read_toc_data3);
+    }
+    else
+    {
+        /* When TIME is set to zero, the address fields in some returned 
+         * data formats shall be in LBA form. 
+         */
+        if(0 == read_toc_cmd->format)
+        {
+            /* 0 is mean to valid as a Track Number */
+            response_ptr = usbsdms_read_toc_data1_format0000;
+            response_length = sizeof(usbsdms_read_toc_data1_format0000);
+        }
+        else if(1 == read_toc_cmd->format)
+        {
+            /* 1 is mean to ignored by Logical Unit */
+            response_ptr = usbsdms_read_toc_data1_format0001;
+            response_length = sizeof(usbsdms_read_toc_data1_format0001);
+        }
+        else
+        {
+            /* Valid as a Session Number */
+            response_ptr = usbsdms_read_toc_data1;
+            response_length = sizeof(usbsdms_read_toc_data1);
+        }
+    }
+
+    memcpy(buf, response_ptr, response_length);
+
+    if(response_length < common->data_size_from_cmnd)
+    {
+        common->data_size_from_cmnd =response_length;
+    }
+
+    common->data_size = common->data_size_from_cmnd;
+    
+    common->residue = common->usb_amount_left = common->data_size;
+    
+    return response_length;
+}
+#endif
+/* DTS2012011801998 chenxi 20120203 end >*/
+
 
 static int do_mode_sense(struct fsg_common *common, struct fsg_buffhd *bh)
 {
@@ -1458,6 +1628,9 @@ static int do_mode_sense(struct fsg_common *common, struct fsg_buffhd *bh)
 	 * The mode pages, in numerical order.  The only page we support
 	 * is the Caching page.
 	 */
+    /* < DTS2012032004277 chenxi 20120328 begin */
+    /* to support multiple disks */
+#ifndef CONFIG_HUAWEI_KERNEL
 	if (page_code == 0x08 || all_pages) {
 		valid_page = 1;
 		buf[0] = 0x08;		/* Page code */
@@ -1478,6 +1651,10 @@ static int do_mode_sense(struct fsg_common *common, struct fsg_buffhd *bh)
 		}
 		buf += 12;
 	}
+#else
+	valid_page=1;
+#endif
+    /* DTS2012032004277 chenxi 20120328 end > */
 
 	/*
 	 * Check that a valid page was requested and the mode data length
@@ -1658,6 +1835,44 @@ static int wedge_bulk_in_endpoint(struct fsg_dev *fsg)
 	return rc;
 }
 
+/* < DTS2012032004277 chenxi 20120329 begin */
+/* to solve the problem that some host reset usb ports continuously 
+ * when there is cdrom
+ */
+#ifdef CONFIG_HUAWEI_KERNEL
+static int pad_with_zeros(struct fsg_dev *fsg)
+{
+	struct fsg_buffhd	*bh = fsg->common->next_buffhd_to_fill;
+	u32			nkeep = bh->inreq->length;
+	u32			nsend;
+	int			rc;
+
+	bh->state = BUF_STATE_EMPTY;		/* For the first iteration */
+	fsg->common->usb_amount_left = nkeep + fsg->common->residue;
+	while (fsg->common->usb_amount_left > 0) {
+
+		/* Wait for the next buffer to be free */
+		while (bh->state != BUF_STATE_EMPTY) {
+			rc = sleep_thread(fsg->common);
+			if (rc)
+				return rc;
+		}
+
+		nsend = min(fsg->common->usb_amount_left, FSG_BUFLEN);
+		memset(bh->buf + nkeep, 0, nsend - nkeep);
+		bh->inreq->length = nsend;
+		bh->inreq->zero = 0;
+		start_transfer(fsg, fsg->bulk_in, bh->inreq,
+			       &bh->inreq_busy, &bh->state);
+		bh = fsg->common->next_buffhd_to_fill = bh->next;
+		fsg->common->usb_amount_left -= nsend;
+		nkeep = 0;
+	}
+	return 0;
+}
+#endif
+/* DTS2012032004277 chenxi 20120329 end > */
+
 static int throw_away_data(struct fsg_common *common)
 {
 	struct fsg_buffhd	*bh;
@@ -1742,6 +1957,42 @@ static int finish_reply(struct fsg_common *common)
 
 	/* All but the last buffer of data must have already been sent */
 	case DATA_DIR_TO_HOST:
+        /* < DTS2012032004277 chenxi 20120329 begin */        
+        /* to solve the problem that some host reset usb ports continuously 
+         * when there is cdrom
+         */
+#ifdef CONFIG_HUAWEI_KERNEL        
+		if (common->data_size == 0) {
+			/* Nothing to send */
+
+		/* If there's no residue, simply send the last buffer */
+		} else if (common->residue == 0) {
+			bh->inreq->zero = 0;
+			if (!start_in_transfer(common, bh))
+				return -EIO;
+			common->next_buffhd_to_fill = bh->next;
+
+		/*
+		 * For Bulk-only, if we're allowed to stall then send the
+		 * short packet and halt the bulk-in endpoint.  If we can't
+		 * stall, pad out the remaining data with 0's.
+		 */
+		} else if (common->can_stall) {
+			bh->inreq->zero = 1;
+			if (!start_in_transfer(common, bh))
+				/* Don't know what to do if
+				 * common->fsg is NULL */
+				rc = -EIO;
+			common->next_buffhd_to_fill = bh->next;
+			if (common->fsg)
+				rc = halt_bulk_in_endpoint(common->fsg);
+		} else if (fsg_is_set(common)) {
+			rc = pad_with_zeros(common->fsg);
+		} else {
+			/* Don't know what to do if common->fsg is NULL */
+			rc = -EIO;
+		}
+#else
 		if (common->data_size == 0) {
 			/* Nothing to send */
 
@@ -1771,6 +2022,8 @@ static int finish_reply(struct fsg_common *common)
 			if (common->can_stall)
 				rc = halt_bulk_in_endpoint(common->fsg);
 		}
+#endif
+        /* DTS2012032004277 chenxi 20120329 end > */
 		break;
 
 	/*
@@ -2158,7 +2411,14 @@ static int do_scsi_command(struct fsg_common *common)
 		common->data_size_from_cmnd =
 			get_unaligned_be16(&common->cmnd[7]);
 		reply = check_command(common, 10, DATA_DIR_TO_HOST,
+                      /*< DTS2012011801998 chenxi 20120203 begin */
+                      /* to support cdrom in mac system */
+#ifndef CONFIG_HUAWEI_KERNEL
 				      (7<<6) | (1<<1), 1,
+#else
+				      (3<<1) | (7<<7), 1,
+#endif
+                      /* DTS2012011801998 chenxi 20120203 end >*/
 				      "READ TOC");
 		if (reply == 0)
 			reply = do_read_toc(common, bh);
@@ -2250,6 +2510,28 @@ static int do_scsi_command(struct fsg_common *common)
 		if (reply == 0)
 			reply = do_write(common);
 		break;
+
+    /*< DTS2012022706082 chenxi 20120302 begin */
+    /*< DTS2012011801998 chenxi 20120203 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+    case SC_REWIND:
+    case SC_REWIND_11:
+        USB_PR("do rewind: cmdsize = %d\n", common->cmnd_size);
+        /* when rework in manufacture, if the phone is in google ports mode, 
+         * we need to switch it to multi-ports mode for using the diag. 
+         */
+        if( GOOGLE_INDEX == usb_para_data.usb_para.usb_pid_index)
+        {
+    		usb_port_switch_request(ORI_INDEX);
+    	} 
+    	else
+    	{
+    		usb_port_switch_request(NORM_INDEX);
+    	}
+		break;
+#endif
+    /* DTS2012011801998 chenxi 20120203 end >*/
+    /* DTS2012022706082 chenxi 20120302 end >*/
 
 	/*
 	 * Some mandatory commands that we recognize but don't implement.
@@ -3195,6 +3477,33 @@ fsg_add(struct usb_composite_dev *cdev, struct usb_configuration *c,
 	return fsg_bind_config(cdev, c, common);
 }
 
+/* < DTS2012022400909 chenxi 20120224 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+/*
+ * fsg_close_all_file: close all stored file in each lun
+ * @common: struct fsg_common *common
+ * Return value: void
+ * Side effect : none
+ */
+static void fsg_close_all_file(struct fsg_common *common)
+{
+    USB_PR("%s\n", __func__);
+    down_write(&common->filesem);
+    if (likely(common->luns)) {
+        struct fsg_lun *lun = common->luns;
+        unsigned i = common->nluns;
+    
+        /* In error recovery nluns may be zero. */
+        for (; i; --i, ++lun) {
+            fsg_lun_close(lun);
+            lun->unit_attention_data = SS_MEDIUM_NOT_PRESENT;
+        } 
+    }
+    /* protect the luns rw_semaphore */
+    up_write(&common->filesem);
+}
+#endif
+/* DTS2012022400909 chenxi 20120224 end > */
 
 /************************* Module parameters *************************/
 

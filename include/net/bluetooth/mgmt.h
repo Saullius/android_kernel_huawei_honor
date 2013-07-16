@@ -20,6 +20,7 @@
    COPYRIGHTS, TRADEMARKS OR OTHER RIGHTS, RELATING TO USE OF THIS
    SOFTWARE IS DISCLAIMED.
 */
+/*DTS2012051403908 sihongfang 20120515 modify for roll back qcom bluetooth stack*/
 
 #define MGMT_INDEX_NONE			0xFFFF
 
@@ -342,16 +343,3 @@ struct mgmt_ev_encrypt_change {
 } __packed;
 
 
-#define MGMT_EV_REMOTE_CLASS		0x0017
-struct mgmt_ev_remote_class {
-	bdaddr_t bdaddr;
-	__u8 dev_class[3];
-} __packed;
-
-#define MGMT_EV_REMOTE_VERSION		0x0018
-struct mgmt_ev_remote_version {
-	bdaddr_t bdaddr;
-	__u8	lmp_ver;
-	__u16	manufacturer;
-	__u16	lmp_subver;
-} __packed;

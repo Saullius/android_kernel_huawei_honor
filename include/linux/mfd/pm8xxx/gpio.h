@@ -142,6 +142,11 @@ struct pm_gpio {
  * RETURNS: an appropriate -ERRNO error value on error, or zero for success.
  */
 int pm8xxx_gpio_config(int gpio, struct pm_gpio *param);
+/* <DTS2012041003722 sibingsong 20120410 begin */
+/* < DTS2011102201769 zhangyu 20111025 begin */
+void pm8xxx_gpio_set_value( unsigned gpio, int value) ;
+/* DTS2011102201769 zhangyu 20111025 end > */
+/* DTS2012041003722 sibingsong 20120410 end> */
 #else
 static inline int pm8xxx_gpio_config(int gpio, struct pm_gpio *param)
 {

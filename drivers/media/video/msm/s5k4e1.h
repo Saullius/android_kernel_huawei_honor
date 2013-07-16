@@ -82,6 +82,14 @@ struct s5k4e1_reg {
 	const unsigned short reg_mipi_size;
 	const struct s5k4e1_i2c_reg_conf *rec_settings;
 	const unsigned short rec_size;
+	/*< DTS2012021006236 zhangyu 20120210 begin */
+	/*< DTS2012011301770   songxiaoming 20120204 begin */ 
+	/* <DTS2011122208447 zhouqiwei 20111222 begin > */
+	const struct s5k4e1_i2c_reg_conf *reg_lc;
+	const unsigned short reg_lc_size;
+	/* < DTS2011122208447 zhouqiwei 20111222 end > */
+	/* DTS2012011301770  songxiaoming 20120204 end > */
+	/* DTS2012021006236 zhangyu 20120210 end > */
 	const struct s5k4e1_i2c_reg_conf *reg_pll_p;
 	const unsigned short reg_pll_p_size;
 	const struct s5k4e1_i2c_reg_conf *reg_pll_s;

@@ -603,6 +603,11 @@ __tagtable(ATAG_CORE, parse_tag_core);
 
 static int __init parse_tag_mem32(const struct tag *tag)
 {
+    /*< DTS2012040200123 lizhigang 20120401 begin */
+#ifdef CONFIG_FRAMEBUF_SELF_ADAPT
+	printk("parse_tag_mem32: addr=0x%x, size=0x%x\n",tag->u.mem.start, tag->u.mem.size);
+#endif
+    /* DTS2012040200123 lizhigang 20120401 end >*/
 	return arm_add_memory(tag->u.mem.start, tag->u.mem.size);
 }
 

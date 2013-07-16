@@ -437,6 +437,9 @@ struct input_keymap_entry {
 
 #define KEY_WIMAX		246
 #define KEY_RFKILL		247	/* Key that controls all radios */
+/*< DTS2011091902006 duanfei 20110919 begin */
+#define KEY_GENIUSBUTTON        248  /* specially for a certain APK */
+/* DTS2011091902006 duanfei 20110919 end >*/
 
 /* Code 255 is reserved for special needs of AT keyboard driver */
 
@@ -829,6 +832,14 @@ struct input_keymap_entry {
 #define MSC_MAX			0x07
 #define MSC_CNT			(MSC_MAX+1)
 
+/* < DTS2012020902104 zhangmin 20120209 begin */
+/* modify for ES-version*/
+#define ABS_LIGHT            0x2e
+/* DTS2012020902104 zhangmin 20120209 end > */
+
+/*<BU5D09205 zhangtao 20100503 begin*/
+#define BTN_TOUCH2         0x102
+/*BU5D09205 zhangtao 20100503 end>*/
 /*
  * LEDs
  */

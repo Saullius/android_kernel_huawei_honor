@@ -238,6 +238,17 @@ static int pm8058_pwm_bank_enable(struct pwm_device *pwm, int enable)
 	struct pm8058_pwm_chip	*chip;
 
 	chip = pwm->chip;
+	/*< DTS2011090505366 lijianzhao 20110920 begin */
+	/* merge qualcom offer patch ,so keep c8860 keypad led independence */
+	rc = pm8xxx_readb(pwm->dev->parent, SSBI_REG_ADDR_LPG_BANK_EN, &reg); 
+	if (rc) 
+	{ 
+		pr_err("%s: pm8058_read(): rc=%d (Enable or disable LPG Bank)\n", 
+		__func__, rc); 
+		goto bail_out; 
+	} 
+	chip->bank_mask = reg;
+	/* DTS2011090505366 lijianzhao 20110920 end >*/
 
 	if (enable)
 		reg = chip->bank_mask | (1 << pwm->pwm_id);

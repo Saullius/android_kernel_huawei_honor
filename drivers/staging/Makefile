@@ -73,3 +73,6 @@ obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4)	+= ste_rmi4/
 obj-$(CONFIG_DRM_PSB)		+= gma500/
 obj-$(CONFIG_INTEL_MEI)		+= mei/
 obj-$(CONFIG_MFD_NVEC)		+= nvec/
+# /* < DTS2011090704268 jiaxianghong 20110914 begin */
+obj-$(CONFIG_HUAWEI_HUNGTASK)   += rsm/
+# /* DTS2011090704268 jiaxianghong 20110914 end > */ 

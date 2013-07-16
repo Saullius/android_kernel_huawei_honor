@@ -1284,7 +1284,14 @@ enum nl80211_attrs {
 #define NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY	24
 #define NL80211_HT_CAPABILITY_LEN		26
 
+/* < DTS2012021404632 zhuwenying 20120214 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+#define NL80211_MAX_NR_CIPHER_SUITES		6
+#else
 #define NL80211_MAX_NR_CIPHER_SUITES		5
+#endif
+/* DTS2012021404632 zhuwenying 20120214 end > */
+
 #define NL80211_MAX_NR_AKM_SUITES		2
 
 /**
@@ -2081,6 +2088,11 @@ enum nl80211_mfp {
 enum nl80211_wpa_versions {
 	NL80211_WPA_VERSION_1 = 1 << 0,
 	NL80211_WPA_VERSION_2 = 1 << 1,
+/* < DTS2012021404632 zhuwenying 20120214 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+	NL80211_WAPI_VERSION_1 = 1 << 2,
+#endif
+/* DTS2012021404632 zhuwenying 20120214 end > */
 };
 
 /**

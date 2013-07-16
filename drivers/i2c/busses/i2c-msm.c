@@ -216,6 +216,13 @@ msm_i2c_interrupt(int irq, void *devid)
 			err = -EIO;
 			goto out_err;
 		}
+/* <BU5D07680 liujinggang 20100413 begin */
+    	if( (dev->msg->addr == 0x1E))//st303_compass address 0x1e
+		{
+			//printk(KERN_ERR "msg->addr=:0x%x \n",dev->msg->addr);
+			udelay(10);
+		}
+/* BU5D07680 liujinggang 20100413 end> */
 
 		if (dev->cnt) {
 			/* Ready to take a byte */

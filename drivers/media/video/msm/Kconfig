@@ -10,27 +10,167 @@ config MSM_CAMERA_V4L2
           and /dev/control0.
 
 comment "Camera Sensor Selection"
+#/*< DTS2012020400396 zhangyu 20120206 begin */
+#/* <DTS2011083104712 yuguangcai 20110908 begin */
+config HUAWEI_CAMERA
+	bool "HUAWEI_CAMERA "
+	depends on MSM_CAMERA && !ARCH_MSM8X60 && !ARCH_MSM8960 && !MSM_CAMERA_V4L2
+	default n
+	---help---
+	  Huawei Camera 
+#/*< DTS2011092104220   yuguangcai 20110921 begin */
+config HUAWEI_CAMERA_SENSOR_S5K5CA
+	tristate "s5k5ca is used"
+	default n
+	help
+	if Y ,select HUAWEI_CAMERA_SENSOR_S5K5CA
+#/* DTS2011092104220   yuguangcai 20110921 end > */
+#/*< DTS2011100802771   songxiaoming 20111009 begin */
+config HUAWEI_CAMERA_SENSOR_MT9T113
+	tristate "mt9t113 is used"
+	default n
+	help
+	if Y ,select HUAWEI_CAMERA_SENSOR_MT9T113
+#/* DTS2011100802771   songxiaoming 20111009 end > */
+#/* DTS2012020400396 zhangyu 20120206 end > */
 config MT9T013
 	bool "Sensor mt9t013 (BAYER 3M)"
 	depends on MSM_CAMERA && !ARCH_MSM8X60 && !ARCH_MSM8960 && !MSM_CAMERA_V4L2
 	default y
 	---help---
 	  MICRON 3M Bayer Sensor with AutoFocus
-config MT9D113
+#/*< DTS2012020400396 zhangyu 20120206 begin */
+#/*< DTS2011112401319 yuguangcai 20111124 begin */
+config HUAWEI_CAMERA_SENSOR_MT9D113
 	bool "Sensor mt9d113 (YUV 2M)"
-	depends on MSM_CAMERA && ARCH_MSM8X60 && !MSM_CAMERA_V4L2
-	default y
+	default n
 	---help---
 	  MICRON 2M YUV Sensor
 	  This sensor is the front camera on QT8660.
 	  This uses csi mipi interface.
 	  This sensor is used only on QT device.
+#/* DTS2011112401319 yuguangcai 20111124 end > */
+#/* < DTS2011123001368 zhouqiwei 20111219 begin */
+config HUAWEI_CAMERA_SENSOR_MT9V113
+	tristate "mt9v113 is used"
+	default n
+	help
+	if Y ,select HUAWEI_CAMERA_SENSOR_MT9V113
+#/* DTS2011123001368 zhouqiwei 20111219 end > */
+#/* DTS2012020400396 zhangyu 20120206 end > */
 config MT9D112
 	bool "Sensor mt9d112 (YUV 2M)"
 	depends on MSM_CAMERA && !ARCH_MSM8X60 && !ARCH_MSM8960 && !MSM_CAMERA_V4L2
 	default y
 	---help---
 	  MICRON 2M YUV Sensor
+#/*< DTS2012011904543 lijianzhao 20120119 begin */
+#/*<BU5D09497  lijuan 00152865  20100514 begin*/
+config  HUAWEI_CAMERA
+	bool "Select huawei camera"
+	depends on MSM_CAMERA
+	depends on HUAWEI_KERNEL
+	default n
+	---help---
+	  Select huawei camera
+#/* BU5D09497  lijuan 00152865  20100514 end> */
+
+#/*< DTS2011051400258   songxiaoming 20110514 begin */
+config HUAWEI_SENSOR_HI701
+	bool "Sensor Hynix (YUV 30W)"
+	depends on HUAWEI_CAMERA
+	default n
+	---help---
+	  Hynix 30w YUV Sensor
+#/* DTS2011051400258   songxiaoming 20110514 end > */
+
+#/* < DTS2011081301650 liwei 20110813 begin */
+config HUAWEI_SENSOR_OV7690
+	bool "Sensor ov7690 (YUV 30K)"
+	depends on HUAWEI_CAMERA
+	default n
+	---help---
+	  MICRON 30k YUV Sensor
+#/* DTS2011081301650 liwei 20110813 end > */
+
+#/*<BU5D10275  liyuping 00166065 20100529 begin*/
+
+#/*< DTS2011072600848   songxiaoming 20110726 begin */
+config HUAWEI_SENSOR_OV7736
+	bool "Sensor ov7736 (YUV 30W)"
+	depends on HUAWEI_CAMERA
+	default n
+	---help---
+	  MICRON 30W YUV Sensor
+#/* DTS2011072600848   songxiaoming 20110726 end > */
+	  
+config HUAWEI_SENSOR_HIMAX0356
+	bool "Sensor himax (YUV 30W)"
+	depends on HUAWEI_CAMERA
+	default n
+	---help---
+	  HIMAX 30w YUV Sensor
+#/* BU5D10275  liyuping 00166065 20100529 end> */
+
+#/*<DTS2011042704563 penghai 20110427 begin*/
+config HUAWEI_SENSOR_MT9D113
+	bool "Sensor Aptina (YUV 200W)"
+	depends on HUAWEI_CAMERA
+	default n
+	---help---
+	  Aptina 200w YUV Sensor
+#/*DTS2011042704563 penghai 20110427 end>*/
+
+#/* < DTS2011061801881 zhangyu 20110620 BEGIN */
+config HUAWEI_SENSOR_MT9V114
+	bool "Sensor Aptina (YUV 30W)"
+	depends on HUAWEI_CAMERA
+	default n
+	---help---
+	  Aptina 30w YUV Sensor
+	  
+#/* DTS2011061801881 zhangyu 20110620 END > */ 
+#/* <DTS2012032603420 sibingsong 20120326 begin */
+#/* delte macro CONFIG_HUAWEI_SENSOR_S5K4E1GX*/
+#/* DTS2012032603420 sibingsong 20120326 end> */
+#/*< DTS2012020400396 zhangyu 20120206 begin */
+#/* < DTS2011090701903 zhangyu 20110907 begin */
+config HUAWEI_SENSOR_MT9P017
+	bool "Sensor mt9p017 (BAYER 5M)"
+	depends on HUAWEI_CAMERA
+	default n
+	---help---
+	  Sunny 5M Bayer Sensor with AutoFocus
+	  	  
+#/* DTS2011090701903 zhangyu 20110907 end > */ 
+#/* DTS2012020400396 zhangyu 20120206 end > */
+	  
+#/* < DTS2012041003147 liuxin 20120223 begin */
+config HUAWEI_SENSOR_S5K4E1GX_P
+	bool "Sensor s5k4e1gx (BAYER 5M)"
+	depends on HUAWEI_CAMERA
+	default n
+	---help---
+	  MICRON 5M Bayer Sensor with AutoFocus
+	  
+#/* DTS2012041003147 liuxin 20120223 end > */ 
+#/*<BU5D09497  lijuan 00152865  20100514 begin*/	  
+config HUAWEI_SENSOR_OV5647_SUNNY
+	bool "Sensor ov5647_sunny (BAYER 5M)"
+	depends on HUAWEI_CAMERA
+	default n
+	---help---
+	  MICRON 5M Bayer Sensor with AutoFocus
+#/* BU5D09497  lijuan 00152865  20100514 end> */
+#/* DTS2012011904543 lijianzhao 20120119 end >*/
+#/* < DTS2010092501047 luojianhong 201000926 begin*/	  
+config HUAWEI_FEATURE_RIGHT_TPA2028D1_AMPLIFIER
+	tristate "right tpa2028d1 amplifier"
+	depends on HUAWEI_KERNEL
+	default y
+	---help---
+	  tpa2028d1 amplifier used for audio.
+#/*  DTS2010092501047 luojianhong 201000926 end > */
 config IMX074
 	bool "Sensor IMX074 (BAYER 13.5M)"
 	depends on MSM_CAMERA && (ARCH_MSM8X60 || ARCH_MSM8960)
@@ -118,6 +258,15 @@ config MT9E013
 	---help---
 	  Aptina 8M Bayer Sensor modules with Autofocus
 
+#/*<DTS2011042704563 penghai 20110427 begin*/
+config HUAWEI_SENSOR_MT9E013
+	bool "Sensor mt9e013 module (BAYER 8M)"
+	depends on HUAWEI_CAMERA
+	default y
+	---help---
+	  Aptina 8M Bayer Sensor modules with Autofocus
+#/*DTS2011042704563 penghai 20110427 end>*/
+
 config IMX074_ACT
 	bool "Actuator IMX074 (BAYER 13.5M)"
 	depends on MSM_CAMERA && ARCH_MSM8960
@@ -139,7 +288,9 @@ config QS_S5K4E1
 	---help---
 	  Samsung 5M with Autofocus
 
-config S5K4E1
+#/*< DTS2012020400396 zhangyu 20120206 begin */
+#/* < DTS2011091701690  zhangyu 20110917 begin */
+config HUAWEI_SENSOR_S5K4E1
 	bool "Sensor Sensor s5k4e1 (Samsung 5M)"
 	depends on MSM_CAMERA
 	default n
@@ -148,6 +299,8 @@ config S5K4E1
 	  It is a Bayer 5MP sensor with auto focus and it supports
 	  two mipi lanes, required for msm7x2xA platform.
 	  Say Y here if this is msm7x2xA variant platform.
+#/* DTS2011091701690 zhangyu 20110917 end > */
+#/* DTS2012020400396 zhangyu 20120206 end > */
 
 config DW9712_ACT
 	bool "Lens actuator dw9721"
@@ -180,6 +333,12 @@ config OV2720
 	depends on MSM_CAMERA && ARCH_MSM8960
 	default y
 
+config QS_MT9P017
+	bool "Sensor qs_mt9p017 (Aptina 3D 5M)"
+	depends on MSM_CAMERA
+	---help---
+	  Aptina 3D 5M with Autofocus
+
 config VB6801
 	bool "Sensor vb6801"
 	depends on MSM_CAMERA && !ARCH_MSM8X60 && !MSM_CAMERA_V4L2
@@ -192,6 +351,23 @@ config MSM_CAMERA_FLASH
 	default y
 	---help---
 	  Enable support for LED flash for msm camera
+
+#/*< DTS2011091402372   yuguangcai 20110914 begin */
+config HUAWEI_FEATURE_TPS61310
+	tristate "TPS61310"
+	depends on HUAWEI_KERNEL
+	default n
+	help
+	  tps61310 LED camera flash and video light
+#/* DTS2011091402372   yuguangcai 20110914 end > */
+#/* < DTS2011072705129 xiangxu 20110728 begin */
+config HW_TORCH
+	bool "HUAWEI torch support"
+	depends on MSM_CAMERA_FLASH
+	default n
+	---help---
+	  Enable support for LED flash for torch
+#/* DTS2011072705129 xiangxu 20110728 end > */
 
 config MSM_CAMERA_SENSOR
 	bool "Qualcomm MSM camera sensor support"

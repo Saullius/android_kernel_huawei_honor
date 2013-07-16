@@ -90,7 +90,14 @@ struct eth_dev {
 
 #define RX_EXTRA	20	/* bytes guarding against rx overflows */
 
+/* < DTS2012030103703 chenxi 20120306 begin */
+/* increase the rndis tx list buffer for reducing the wait time of net queue  */
+#ifdef CONFIG_HUAWEI_KERNEL
+#define DEFAULT_QLEN	8
+#else
 #define DEFAULT_QLEN	2	/* double buffering by default */
+#endif
+/* DTS2012030103703 chenxi 20120306 end > */
 
 
 #ifdef CONFIG_USB_GADGET_DUALSPEED

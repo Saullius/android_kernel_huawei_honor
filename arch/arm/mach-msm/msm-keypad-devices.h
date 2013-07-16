@@ -19,4 +19,15 @@ extern struct platform_device keypad_device_7k_ffa;
 extern struct platform_device keypad_device_8k_ffa;
 extern struct platform_device keypad_device_surf;
 
+/*< DTS2012020306500 lijianzhao 20120204 begin */
+#if defined(CONFIG_HUAWEI_GPIO_KEYPAD)
+extern struct platform_device keypad_device_default;
+/* because all production KEY_VOLUMEUP and KEY_VOLUMEDOWN sameness,
+ * so use keypad_device_default ,
+ * del keypad_device_u8655, del 1 row,
+ * for tending to promote code unity.
+ */
+extern struct platform_device keypad_device_u8185;
+#endif
+/* DTS2012020306500 lijianzhao 20120204 end >*/
 #endif

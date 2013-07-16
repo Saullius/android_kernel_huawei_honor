@@ -270,6 +270,19 @@ static struct clk_lookup msm_clocks_7x27a[] = {
 	CLK_LOOKUP("csi_clk",		csi0_clk.c,	"msm_camera_ov7692.0"),
 	CLK_LOOKUP("csi_pclk",		csi0_p_clk.c,	"msm_camera_ov7692.0"),
 	CLK_LOOKUP("csi_vfe_clk",	csi0_vfe_clk.c,	"msm_camera_ov7692.0"),
+/*< DTS2012021006236 zhangyu 20120210 begin */
+/* < DTS2011123001368 zhouqiwei 20111219 begin */
+#ifdef CONFIG_HUAWEI_CAMERA
+	/* If disable these three sentences, the camera will not work,for not
+	 * receiving any frames from camera driver.
+	   If add a new front mipi camera,we can add three sentences as mt9v113
+	 */
+	CLK_LOOKUP("csi_clk",		csi0_clk.c,	"msm_camera_mt9v113.0"),
+	CLK_LOOKUP("csi_pclk",		csi0_p_clk.c,	"msm_camera_mt9v113.0"),
+	CLK_LOOKUP("csi_vfe_clk",	csi0_vfe_clk.c,	"msm_camera_mt9v113.0"),
+#endif 
+/* DTS2011123001368 zhouqiwei 20111219 end > */
+/* DTS2012021006236 zhangyu 20120210 end > */
 	CLK_LOOKUP("csi_clk",		csi1_clk.c,	NULL),
 	CLK_LOOKUP("csi_pclk",		csi1_p_clk.c,	NULL),
 	CLK_LOOKUP("csi_vfe_clk",	csi1_vfe_clk.c,	NULL),

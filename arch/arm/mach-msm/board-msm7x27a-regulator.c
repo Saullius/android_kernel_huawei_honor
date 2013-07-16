@@ -194,6 +194,9 @@ PCOM_VREG_CONSUMERS(ldo19) = {
 	REGULATOR_SUPPLY("ldo19",	NULL),
 	REGULATOR_SUPPLY("wlan4",	NULL),
 };
+/*< DTS2012031305833 xiewen 20120313 begin */
+/* Rolled back the list of issues: DTS2012020906557,del 3 line */
+/* DTS2012031305833 xiewen 20120313 end >*/
 
 PCOM_VREG_CONSUMERS(ncp)   = {
 	REGULATOR_SUPPLY("ncp",		NULL),
@@ -229,10 +232,12 @@ static struct proccomm_regulator_info msm7x27a_pcom_vreg_info[] = {
 	PCOM_VREG_LDO(ldo14, 16, NULL, 3300000, 3300000, 0, -1, 0, 0, 0, 0, p),
 	PCOM_VREG_LDO(ldo15, 54, NULL, 1800000, 2850000, 0, -1, 0, 0, 0, 0, p),
 	PCOM_VREG_LDO(ldo16, 19, NULL, 1800000, 2850000, 0, -1, 0, 0, 0, 0, p),
-	PCOM_VREG_LDO(ldo17, 56, NULL, 2900000, 3300000, 0, -1, 0, 0, 0, 0, p),
+	PCOM_VREG_LDO(ldo17, 56, NULL, 2800000, 3300000, 0, -1, 0, 0, 0, 0, p),
 	PCOM_VREG_LDO(ldo18, 11, NULL, 2700000, 2700000, 0, -1, 0, 0, 0, 0, p),
 	PCOM_VREG_LDO(ldo19, 57, NULL, 1200000, 1800000, 0, -1, 0, 0, 0, 0, p),
-
+    /*< DTS2012031305833 xiewen 20120313 begin */
+    /* Rolled back the list of issues: DTS2012020906557,del 1 line */
+    /* DTS2012031305833 xiewen 20120313 end >*/
 	PCOM_VREG_NCP(ncp,   31, NULL, -1800000, -1800000, 0,     0, 0, 0, 0),
 };
 

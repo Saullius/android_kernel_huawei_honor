@@ -707,9 +707,10 @@ u32 vcd_free_buffers_internal(
 			}
 		}
 
+   /*<DTS2010073100011  penghai 20100731 begin*/
+    	vcd_reset_buffer_pool_for_reuse(buf_pool);
 	}
-
-	vcd_reset_buffer_pool_for_reuse(buf_pool);
+/*DTS2010073100011  penghai 20100731 end>*/
 
 	return rc;
 }

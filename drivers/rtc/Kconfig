@@ -1142,4 +1142,10 @@ config RTC_DRV_PM8XXX
 	  To compile this driver as a module, choose M here: the
 	  module will be called rtc-pm8xxx.
 
+#/*< DTS2011052803245  wangjiongfeng 20110531 begin */
+config  HUAWEI_FEATURE_POWEROFF_ALARM
+	bool "HUAWEI PowerOff Alarm"
+	depends on HUAWEI_KERNEL
+	default n
+#/* DTS2011052803245  wangjiongfeng 20110531 end >*/
 endif # RTC_CLASS

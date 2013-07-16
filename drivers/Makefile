@@ -125,3 +125,13 @@ obj-y				+= ieee802154/
 obj-y				+= clk/
 
 obj-$(CONFIG_HWSPINLOCK)	+= hwspinlock/
+# /* < DTS2011042602168 caomingxing 20110426 begin */
+#/*< DTS2011011904316 genghua 20110121 begin */
+obj-$(CONFIG_HUAWEI_NFC_PN544) += nfc/
+#/* DTS2011011904316 genghua 20110121 end >*/
+# /* DTS2011042602168 caomingxing 20110426 end > */
+#/* < DTS2011052606009 jiaxianghong 20110527 begin */
+#/* <DTS2011032104626 shenjinming 20110321 begin */
+obj-$(CONFIG_HUAWEI_HW_DEV_DCT) += devdetect/
+#/* <DTS2011032104626 shenjinming 20110321 end> */
+#/* < DTS2011052606009 jiaxianghong 20110527 end */

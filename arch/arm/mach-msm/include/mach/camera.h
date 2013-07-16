@@ -324,6 +324,9 @@ struct msm_sensor_ctrl {
 	int (*s_init)(const struct msm_camera_sensor_info *);
 	int (*s_release)(void);
 	int (*s_config)(void __user *);
+	/* < DTS2012052201247 tangying 20120522 begin */
+	int (*s_reset_regs)(void);
+	/* DTS2012052201247 tangying 20120522 end > */
 	enum msm_camera_type s_camera_type;
 	uint32_t s_mount_angle;
 	enum msm_st_frame_packing s_video_packing;
@@ -522,6 +525,17 @@ static inline int msm_flash_ctrl(
 }
 #endif
 
+/*< DTS2011091402372   yuguangcai 20110914 begin */
+/*Add function for new flash tps61310*/
+#ifdef CONFIG_HUAWEI_FEATURE_TPS61310
+int tps61310_set_flash(unsigned led_state);
+#else
+static int tps61310_set_flash(unsigned led_state)
+{
+	return -ENOTSUPP;
+}
+#endif
+/* DTS2011091402372   yuguangcai 20110914 end > */
 
 
 void msm_camvfe_init(void);

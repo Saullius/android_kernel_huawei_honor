@@ -868,9 +868,15 @@ int adreno_idle(struct kgsl_device *device, unsigned int timeout)
 	struct adreno_ringbuffer *rb = &adreno_dev->ringbuffer;
 	unsigned int rbbm_status;
 	unsigned long wait_timeout =
-		msecs_to_jiffies(adreno_dev->wait_timeout);
-	unsigned long wait_time = jiffies + wait_timeout;
-
+	msecs_to_jiffies(adreno_dev->wait_timeout);
+	/*< DTS2012041906630 zhangxiangdang 20120423 begin */
+	/*merge qc patch to fix kgsl issue.*/
+	unsigned long wait_time;
+	unsigned long wait_time_part;
+	unsigned int msecs;
+	unsigned int msecs_first;
+	unsigned int msecs_part;
+	/* DTS2012041906630 zhangxiangdang 20120423 end > */
 	kgsl_cffdump_regpoll(device->id, REG_RBBM_STATUS << 2,
 		0x00000000, 0x80000000);
 	/* first, wait until the CP has consumed all the commands in
@@ -878,8 +884,21 @@ int adreno_idle(struct kgsl_device *device, unsigned int timeout)
 	 */
 retry:
 	if (rb->flags & KGSL_FLAGS_STARTED) {
+		/*< DTS2012041906630 zhangxiangdang 20120423 begin */
+		/*merge qc patch to fix kgsl issue.*/
+		msecs = adreno_dev->wait_timeout;
+		msecs_first = (msecs <= 100) ? ((msecs + 4) / 5) : 100;
+		msecs_part = (msecs - msecs_first + 3) / 4;
+		wait_time = jiffies + wait_timeout;
+		wait_time_part = jiffies + msecs_to_jiffies(msecs_first);
 		adreno_poke(device);
 		do {
+			if (time_after(jiffies, wait_time_part)) {
+				adreno_poke(device);
+				wait_time_part = jiffies +
+					msecs_to_jiffies(msecs_part);
+			}
+			/* DTS2012041906630 zhangxiangdang 20120423 end > */
 			GSL_RB_GET_READPTR(rb, &rb->rptr);
 			if (time_after(jiffies, wait_time)) {
 				KGSL_DRV_ERR(device, "rptr: %x, wptr: %x\n",

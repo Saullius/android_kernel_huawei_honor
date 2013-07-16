@@ -23,6 +23,11 @@
 #include "sdio_cis.h"
 #include "bus.h"
 
+/* <DTS2010092002892 duangan 20100926 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+#include "hw_extern_sdcard.h"
+#endif
+/* DTS2010092002892 duangan 20100926 end> */
 #define to_mmc_driver(d)	container_of(d, struct mmc_driver, drv)
 
 static ssize_t mmc_type_show(struct device *dev,
@@ -263,7 +268,11 @@ int mmc_add_card(struct mmc_card *card)
 {
 	int ret;
 	const char *type;
-
+/* <DTS2010061000035 liyuping 20100610 begin*/
+#ifdef CONFIG_HUAWEI_KERNEL
+	mdelay(100);
+#endif
+/*DTS2010061000035 liyuping 20100610 end > */
 	dev_set_name(&card->dev, "%s:%04x", mmc_hostname(card->host), card->rca);
 
 	switch (card->type) {
@@ -307,6 +316,14 @@ int mmc_add_card(struct mmc_card *card)
 			type, card->rca);
 	}
 
+/* <DTS2010092002892 duangan 20100926 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+    if(MMC_TYPE_SD  == card->type)
+    {
+        hw_extern_sdcard_insert();
+    }
+#endif
+/* DTS2010092002892 duangan 20100926 end> */
 #ifdef CONFIG_DEBUG_FS
 	mmc_add_card_debugfs(card);
 #endif
@@ -338,6 +355,16 @@ void mmc_remove_card(struct mmc_card *card)
 			printk(KERN_INFO "%s: card %04x removed\n",
 				mmc_hostname(card->host), card->rca);
 		}
+        
+        /* <DTS2010092002892 duangan 20100926 begin */
+        #ifdef CONFIG_HUAWEI_KERNEL
+        if(MMC_TYPE_SD  == card->type)
+        {
+            hw_extern_sdcard_remove();
+        }
+        #endif
+        /* DTS2010092002892 duangan 20100926 end> */
+
 		device_del(&card->dev);
 	}
 

@@ -12,6 +12,13 @@
  * add themselves as children of the system bus.
  */
 
+/*< DTS2011082200901 genghua 20110822 begin*/
+/* merge qcom DEBUG_CODE for RPC crashes */
+#ifdef CONFIG_HUAWEI_RPC_CRASH_DEBUG
+#define DEBUG
+#endif
+/* DTS2011082200901 genghua 20110822 end >*/
+
 #include <linux/sysdev.h>
 #include <linux/err.h>
 #include <linux/module.h>

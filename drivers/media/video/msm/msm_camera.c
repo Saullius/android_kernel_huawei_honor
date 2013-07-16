@@ -34,6 +34,16 @@
 #include <mach/camera.h>
 #include <linux/syscalls.h>
 #include <linux/hrtimer.h>
+/*< DTS2011091402372   yuguangcai 20110914 begin */
+#include <asm/mach-types.h>
+/* DTS2011091402372   yuguangcai 20110914 end > */
+/* <DTS2010081400556 shenjinming 20100814 begin */
+/*< DTS2010071902252 shenjinming 20100719 begin */
+#ifdef CONFIG_HUAWEI_EVALUATE_POWER_CONSUMPTION 
+#include <mach/msm_battery.h>
+#endif
+/* DTS2010071902252 shenjinming 20100719 end >*/
+/* DTS2010081400556 shenjinming 20100814 end> */
 #include <linux/ion.h>
 DEFINE_MUTEX(ctrl_cmd_lock);
 
@@ -1981,8 +1991,25 @@ static int msm_get_sensor_info(struct msm_sync *sync, void __user *arg)
 	memcpy(&info.name[0],
 		sdata->sensor_name,
 		MAX_SENSOR_NAME);
+/*< DTS2012021006236 zhangyu 20120210 begin */
+/*< DTS2011111602756 yuguangcai 20111206 begin */
+#ifndef CONFIG_HUAWEI_CAMERA
 	info.flash_enabled = sdata->flash_data->flash_type !=
 		MSM_CAMERA_FLASH_NONE;
+#else
+	if(sdata->pdata->get_board_support_flash != NULL)
+	{
+		/*board support flash should be added as another condition*/
+		info.flash_enabled = (sdata->flash_data->flash_type != MSM_CAMERA_FLASH_NONE)
+			 && (true == sdata->pdata->get_board_support_flash());
+	}
+	else
+	{
+		info.flash_enabled = (sdata->flash_data->flash_type != MSM_CAMERA_FLASH_NONE);
+	}
+#endif
+/* DTS2011111602756 yuguangcai 20111206 end > */
+/* DTS2012021006236 zhangyu 20120210 end > */
 
 	/* copy back to user space */
 	if (copy_to_user((void *)arg,
@@ -2884,8 +2911,31 @@ static long msm_ioctl_config(struct file *filep, unsigned int cmd,
 			ERR_COPY_FROM_USER();
 			rc = -EFAULT;
 		} else
-			rc = msm_flash_ctrl(pmsm->sync->sdata, &flash_info);
-
+		/*< DTS2011091402372   yuguangcai 20110914 begin */
+		{
+/* <DTS2012041003722 sibingsong 20120410 begin */
+            /*Condition that the flash is tps61310 */
+#ifdef CONFIG_ARCH_MSM7X30
+			if(machine_is_msm8255_u8680())
+			{
+#endif
+				if(LED_FLASH == flash_info.flashtype)
+				{
+					CDBG("tps61310_set_flash enter");
+					rc = tps61310_set_flash(flash_info.ctrl_data.led_state);
+				}
+#ifdef CONFIG_ARCH_MSM7X30
+			}
+#endif
+/* DTS2012041003722 sibingsong 20120410 end> */
+            /*other flashes*/
+			else
+			{
+				CDBG("msm_flash_ctrl enter");
+				rc = msm_flash_ctrl(pmsm->sync->sdata, &flash_info);
+			}
+		}
+		/* DTS2011091402372   yuguangcai 20110914 end > */
 		break;
 	}
 
@@ -2914,7 +2964,30 @@ static long msm_ioctl_config(struct file *filep, unsigned int cmd,
 }
 
 static int msm_unblock_poll_frame(struct msm_sync *);
+/* < DTS2012052201247 tangying 20120522 begin */
+/*add this interface to do timeout reset sensor*/
+static int msm_reset_camera_esd(struct msm_sync *sync,void __user *arg)
+{
+    int rc = -EINVAL;
+    int esd_debug_count = 0;
+    
+    if(sync->sctrl.s_reset_regs)
+    {
+        if (copy_from_user(&esd_debug_count,arg,sizeof(int))) {
+            ERR_COPY_FROM_USER();
+            return -EFAULT;
+        }
 
+        printk(KERN_DEBUG "%s:%d real_count=%d\n",__func__,__LINE__,esd_debug_count);
+
+        rc = sync->sctrl.s_reset_regs();
+        if(rc < 0)
+            printk("%s:%d fail\n",__func__,__LINE__);
+    }
+
+    return rc;
+}
+/* DTS2012052201247 tangying 20120522 end > */
 static long msm_ioctl_frame(struct file *filep, unsigned int cmd,
 	unsigned long arg)
 {
@@ -2935,6 +3008,11 @@ static long msm_ioctl_frame(struct file *filep, unsigned int cmd,
 	case MSM_CAM_IOCTL_UNBLOCK_POLL_FRAME:
 		rc = msm_unblock_poll_frame(pmsm->sync);
 		break;
+	/* < DTS2012052201247 tangying 20120522 begin */
+	case MSM_CAM_IOCTL_RESETCAMERA_FOR_ESD:
+		rc = msm_reset_camera_esd(pmsm->sync, argp);
+		break;
+	/* DTS2012052201247 tangying 20120522 end > */
 	default:
 		break;
 	}
@@ -3066,6 +3144,14 @@ static int __msm_release(struct msm_sync *sync)
 		msm_queue_drain(&sync->event_q, list_config);
 
 		wake_unlock(&sync->wake_lock);
+/* <DTS2010081400556 shenjinming 20100814 begin */
+/*< DTS2010071902252 shenjinming 20100719 begin */
+#ifdef CONFIG_HUAWEI_EVALUATE_POWER_CONSUMPTION 
+        /* turn down inside and outside camera consume */
+        huawei_rpc_current_consuem_notify(EVENT_CAMERA_STATE, DEVICE_POWER_STATE_OFF);
+#endif
+/* DTS2010071902252 shenjinming 20100719 end >*/
+/* DTS2010081400556 shenjinming 20100814 end> */
 		sync->apps_id = NULL;
 		sync->core_powered_on = 0;
 	}
@@ -3757,6 +3843,23 @@ static int __msm_open(struct msm_cam_device *pmsm, const char *const apps_id,
 			rc = -ENODEV;
 			goto msm_open_err;
 		}
+/* <DTS2010081400556 shenjinming 20100814 begin */
+/*< DTS2010071902252 shenjinming 20100719 begin */
+#ifdef CONFIG_HUAWEI_EVALUATE_POWER_CONSUMPTION 
+        /* calculate consume for ins and outs camera */
+        if(sync->sdata->slave_sensor) /* inside camera open */       
+        {   
+            huawei_rpc_current_consuem_notify(EVENT_INS_CAMERA_STATE, DEVICE_POWER_STATE_ON);
+        }
+        else  /*out side camera open */
+        {
+            huawei_rpc_current_consuem_notify(EVENT_OUTS_CAMERA_STATE, DEVICE_POWER_STATE_ON);
+        }
+
+#endif
+/* DTS2010071902252 shenjinming 20100719 end >*/
+/* DTS2010081400556 shenjinming 20100814 end> */
+
 		msm_camvpe_fn_init(&sync->vpefn, sync);
 
 		spin_lock_init(&sync->abort_pict_lock);
@@ -3932,13 +4035,22 @@ static int msm_sync_init(struct msm_sync *sync,
 	int rc = 0;
 	struct msm_sensor_ctrl sctrl;
 	sync->sdata = pdev->dev.platform_data;
-
+	/* < DTS2012052201247 tangying 20120522 begin */
+	memset(&sctrl, 0, sizeof(struct msm_sensor_ctrl));
+	/* DTS2012052201247 tangying 20120522 end > */
 	msm_queue_init(&sync->event_q, "event");
 	msm_queue_init(&sync->frame_q, "frame");
 	msm_queue_init(&sync->pict_q, "pict");
 	msm_queue_init(&sync->vpe_q, "vpe");
 
+/* <DTS2010101602934 hufeng 20101016 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+    /** do not sleep in camera to help lower the crash probability. qinwei **/
+	wake_lock_init(&sync->wake_lock, WAKE_LOCK_SUSPEND, "msm_camera");
+#else
 	wake_lock_init(&sync->wake_lock, WAKE_LOCK_IDLE, "msm_camera");
+#endif
+/* DTS2010101602934 hufeng 20101016 end> */
 
 	rc = msm_camio_probe_on(pdev);
 	if (rc < 0) {
@@ -3951,6 +4063,10 @@ static int msm_sync_init(struct msm_sync *sync,
 		sync->sctrl = sctrl;
 	}
 	msm_camio_probe_off(pdev);
+	/*< DTS2011122201199 yuguangcai 20120326 begin */
+	/*add a 10ms delay between camera probes for IOVDD to down*/
+	mdelay(10);
+	/* DTS2011122201199 yuguangcai 20120326 end > */
 	if (rc < 0) {
 		pr_err("%s: failed to initialize %s\n",
 			__func__,
@@ -4048,6 +4164,23 @@ int msm_camera_drv_start(struct platform_device *dev,
 	struct msm_cam_device *pmsm = NULL;
 	struct msm_sync *sync;
 	int rc = -ENODEV;
+	
+/*<DTS2011042704563 penghai 20110427 begin*/
+/*<BU5D08116, lijuan 00152865, 20100419 begin*/
+#ifdef CONFIG_HUAWEI_CAMERA
+	struct msm_camera_sensor_info *sinfo;
+	static int camera_num;
+	static int camera_node_succee[MSM_MAX_CAMERA_SENSORS] = 
+	{0,0,0,0,0};
+
+	sinfo = dev->dev.platform_data;
+	camera_num = sinfo->slave_sensor;
+	if (camera_node_succee[camera_num]) {
+		return rc;
+	}
+#endif	
+/* BU5D08116, lijuan 00152865, 20100419 end> */
+/*DTS2011042704563 penghai 20110427 end>*/
 
 	if (camera_node >= MSM_MAX_CAMERA_SENSORS) {
 		pr_err("%s: too many camera sensors\n", __func__);
@@ -4085,19 +4218,29 @@ int msm_camera_drv_start(struct platform_device *dev,
 		kfree(pmsm);
 		return rc;
 	}
+/*<DTS2011042704563 penghai 20110427 begin*/
+/*<BU5D08116, lijuan 00152865, 20100419 begin*/
+#ifdef CONFIG_HUAWEI_CAMERA
+    	sinfo = dev->dev.platform_data;
+        camera_num = sinfo->slave_sensor;
+#endif
+/* BU5D08116, lijuan 00152865, 20100419 end> */
 
-	CDBG("%s: setting camera node %d\n", __func__, camera_node);
-	rc = msm_device_init(pmsm, sync, camera_node);
+	CDBG("%s: setting camera node %d\n", __func__, camera_num);
+	rc = msm_device_init(pmsm, sync, camera_num);
 	if (rc < 0) {
 		msm_sync_destroy(sync);
 		kfree(pmsm);
 		return rc;
 	}
 
-	camera_type[camera_node] = sync->sctrl.s_camera_type;
-	sensor_mount_angle[camera_node] = sync->sctrl.s_mount_angle;
+	camera_type[camera_num] = sync->sctrl.s_camera_type;
+	sensor_mount_angle[camera_num] = sync->sctrl.s_mount_angle;
+	camera_node_succee[camera_num] = 1;
 	camera_node++;
-
+	CDBG("num:%d, id:%d, type:%d, mount_angle:%d\n", 
+		camera_node, camera_num, camera_type[camera_num], sensor_mount_angle[camera_num]);
+/*DTS2011042704563 penghai 20110427 end>*/
 	list_add(&sync->list, &msm_sensors);
 	return rc;
 }

@@ -23,6 +23,19 @@
 #include <linux/mfd/pm8xxx/core.h>
 #include <linux/mfd/pm8xxx/gpio.h>
 #include <linux/input/pmic8xxx-keypad.h>
+/*< DTS2012010403939 fengwei 20120111 begin */
+#include <asm/mach-types.h>
+/* DTS2012010403939 fengwei 20120111 end >*/
+/*< DTS2012021602342 zhongjinrong 20120224 begin */
+/* <DTS2012022003670 sunkai 20120220 begin */
+#include <linux/hardware_self_adapt.h>
+/* DTS2012022003670 sunkai 20120220 end> */
+/* DTS2012021602342 zhongjinrong 20120224 end >*/
+/* < DTS2012050806572 huzheng 20120518 begin */
+#include <asm/mach-types.h>
+#define PM8058_GPIO_PM_TO_SYS(pm_gpio)     (pm_gpio + NR_GPIO_IRQS)
+#define PM_GPIO_13	PM8058_GPIO_PM_TO_SYS(12)
+/* DTS2012050806572 huzheng 20120518 end > */
 
 #define PM8XXX_MAX_ROWS		18
 #define PM8XXX_MAX_COLS		8
@@ -95,6 +108,11 @@
  * @stuckstate - present state when key stuck irq
  * @ctrl_reg - control register value
  */
+/*< DTS2012021602342 zhongjinrong 20120224 begin */
+/* <DTS2012022003670 sunkai 20120220 begin */
+extern bool mmi_keystate[255];
+/* DTS2012022003670 sunkai 20120220 end> */
+/* DTS2012021602342 zhongjinrong 20120224 end >*/
 struct pmic8xxx_kp {
 	const struct pm8xxx_keypad_platform_data *pdata;
 	struct input_dev *input;
@@ -217,6 +235,13 @@ static int pmic8xxx_kp_read_matrix(struct pmic8xxx_kp *kp, u16 *new_state,
 {
 	int rc, read_rows;
 	u8 scan_val;
+/*< DTS2012021602342 zhongjinrong 20120224 begin */
+/*< DTS2011092601370 zhongjinrong 20110926 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+	int i=0;
+#endif
+/* DTS2011092601370 zhongjinrong 20119026 end >*/
+/* DTS2012021602342 zhongjinrong 20120224 end >*/
 
 	if (kp->pdata->num_rows < PM8XXX_MIN_ROWS)
 		read_rows = PM8XXX_MIN_ROWS;
@@ -233,6 +258,23 @@ static int pmic8xxx_kp_read_matrix(struct pmic8xxx_kp *kp, u16 *new_state,
 				"Error reading KEYP_OLD_DATA, rc=%d\n", rc);
 			return rc;
 		}
+/*< DTS2012021602342 zhongjinrong 20120224 begin */
+/*< DTS2011092601370 zhongjinrong 20110926 begin */
+/*it is reslove the problem of ghost , becuse the six column  just one key */ 
+#ifdef CONFIG_HUAWEI_KERNEL
+		if(machine_is_msm8255_u8730())
+		{
+			if(~old_state[0] &(1<<(kp->pdata->num_cols-1)))
+			{
+				for(i=1;i< kp->pdata->num_rows;i++)
+				{
+					old_state[i]  |= 1<<(kp->pdata->num_cols-1);
+				}
+			}
+		}
+#endif
+/* DTS2011092601370 zhongjinrong 20119026 end >*/
+/* DTS2012021602342 zhongjinrong 20120224 end >*/
 	}
 
 	rc = pmic8xxx_kp_read_data(kp, new_state, KEYP_RECENT_DATA,
@@ -242,7 +284,24 @@ static int pmic8xxx_kp_read_matrix(struct pmic8xxx_kp *kp, u16 *new_state,
 			"Error reading KEYP_RECENT_DATA, rc=%d\n", rc);
 		return rc;
 	}
+/*< DTS2012021602342 zhongjinrong 20120224 begin */
+/*< DTS2011092601370 zhongjinrong 20110926 begin */
+/*it is reslove the problem of ghost , becuse the six column  just one key */ 
+#ifdef CONFIG_HUAWEI_KERNEL
+		if(machine_is_msm8255_u8730())
+		{
+			if(~new_state[0] &(1<<(kp->pdata->num_cols-1)))
+			{
+				for(i=1;i< kp->pdata->num_rows-1;i++)
+				{
+					new_state[i] |= 1<<(kp->pdata->num_cols-1);
+				}
+			}
+		}
 
+#endif
+/* DTS2011092601370 zhongjinrong 20119026 end >*/
+/* DTS2012021602342 zhongjinrong 20120224 end >*/
 	/* 4 * 32KHz clocks */
 	udelay((4 * DIV_ROUND_UP(USEC_PER_SEC, KEYP_CLOCK_FREQ)) + 1);
 
@@ -280,13 +339,28 @@ static void __pmic8xxx_kp_scan_matrix(struct pmic8xxx_kp *kp, u16 *new_state,
 					"pressed" : "released");
 
 			code = MATRIX_SCAN_CODE(row, col, PM8XXX_ROW_SHIFT);
+			/*< DTS2012010403939 fengwei 20120111 begin */
 
-			input_event(kp->input, EV_MSC, MSC_SCAN, code);
-			input_report_key(kp->input,
-					kp->keycodes[code],
-					!(new_state[row] & (1 << col)));
-
-			input_sync(kp->input);
+			/*reduce invalid input event*/
+#ifdef CONFIG_HUAWEI_KERNEL	
+            if (kp->keycodes[code])
+            {
+#endif	
+				input_event(kp->input, EV_MSC, MSC_SCAN, code);
+				input_report_key(kp->input,
+						kp->keycodes[code],
+						!(new_state[row] & (1 << col)));
+				/*< DTS2012021602342 zhongjinrong 20120224 begin */
+				/* <DTS2012022003670 sunkai 20120220 begin */
+				/* use mmi_keystate save the key state */
+	       		mmi_keystate[kp->keycodes[code]] = (!(new_state[row]&(1<<col)))? MMI_KEY_DOWN :MMI_KEY_UP ;
+	   			/* DTS2012022003670 sunkai 20120220 end> */
+				/* DTS2012021602342 zhongjinrong 20120224 end >*/
+				input_sync(kp->input);
+#ifdef CONFIG_HUAWEI_KERNEL		
+            }
+#endif	
+			/* DTS2012010403939 fengwei 20120111 end >*/
 		}
 	}
 }
@@ -296,6 +370,27 @@ static bool pmic8xxx_detect_ghost_keys(struct pmic8xxx_kp *kp, u16 *new_state)
 	int row, found_first = -1;
 	u16 check, row_state;
 
+/*< DTS2012010403939 fengwei 20120111 begin */
+/*
+	* for u8860, c8860 and u8860lp, add the codes means:
+	* when volumn-up and volumn-down keys are pressed in the sametime,
+	* the state of kp scan matrix read from the register is wrong because of hardwared's wrong,
+	* and it will make system think the state as ghost keys mistakenly , 
+	* so these board ids should not be check for ghost keys
+*/
+#ifdef CONFIG_HUAWEI_KERNEL
+	if (machine_is_msm8255_u8860() 
+	 || machine_is_msm8255_c8860() 
+	 || machine_is_msm8255_u8860lp() 
+     /* < DTS2012022905490 ganfan 20120301 begin */
+     || machine_is_msm8255_u8860_r()
+     /* DTS2012022905490 ganfan 20120301 end > */
+	 || machine_is_msm8255_u8860_51())
+	{
+		return 0;
+	}
+#endif
+/* DTS2012010403939 fengwei 20120111 end >*/
 	check = 0;
 	for (row = 0; row < kp->pdata->num_rows; row++) {
 		row_state = (~new_state[row]) &
@@ -466,6 +561,13 @@ static int  __devinit pmic8xxx_kp_config_gpio(int gpio_start, int num_gpios,
 		return -EINVAL;
 
 	for (i = 0; i < num_gpios; i++) {
+	    /* < DTS2012050806572 huzheng 20120518 begin */
+	    if ((machine_is_msm8255_c8860()) && (PM_GPIO_13 == (gpio_start + i)))
+	    {
+		    /* PM_GPIO_13 is used for RF in C8860, should not be configured here */
+		    continue;
+		}
+		/* DTS2012050806572 huzheng 20120518 end > */
 		rc = pm8xxx_gpio_config(gpio_start + i, gpio_config);
 		if (rc) {
 			dev_err(kp->dev, "%s: FAIL pm8xxx_gpio_config():"

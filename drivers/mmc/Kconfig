@@ -27,6 +27,11 @@ config MMC_PERF_PROFILING
 	  If you say Y here, support will be added for collecting
 	  performance numbers at the MMC Queue and Host layers.
 
+#/* < DTS2010111804286  hanshirong 20101118 begin */
+config HUAWEI_WIFI_SDCC
+	bool "Wireless extensions sdcc files"
+	default n
+#/* DTS2010111804286  hanshirong 20101118 end > */
 if MMC
 
 source "drivers/mmc/core/Kconfig"

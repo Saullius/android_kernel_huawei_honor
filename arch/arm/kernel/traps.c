@@ -812,4 +812,11 @@ void __init early_trap_init(void)
 
 	flush_icache_range(vectors, vectors + PAGE_SIZE);
 	modify_domain(DOMAIN_USER, DOMAIN_CLIENT);
+    /* <DTS2010071902568 hufeng 20100719 begin */
+	/*<BU5D08740 qinwei 20100426 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+	user_debug = UDBG_UNDEFINED|UDBG_BADABORT|UDBG_SEGV;
+#endif
+	/*BU5D08740 qinwei 20100426 end >*/
+    /* DTS2010071902568 hufeng 20100719 end> */
 }

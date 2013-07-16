@@ -28,6 +28,13 @@ config DIAG_SDIO_PIPE
 	bool "Enable 9K DIAG traffic over SDIO"
 	help
 	 SDIO Transport Layer for DIAG Router
+#/* < DTS2010120102495 liuhongfei 20101201 begin */           	            
+config HUAWEI_FEATURE_PHUDIAG
+	boolean
+#/* <DTS2011073000898 weizhonghui 20110801 begin */
+	default n
+#/* DTS2011073000898 weizhonghui 20110801 end> */
+#/* < DTS2010120102495 liuhongfei 20101201 end */
 endmenu
 
 menu "HSIC support for DIAG"

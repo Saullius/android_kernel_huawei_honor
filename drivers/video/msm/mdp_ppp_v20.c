@@ -2443,43 +2443,111 @@ void mdp_adjust_start_addr(uint8 **src0,
 	}
 }
 
+/*< DTS2012022307519 zhongjinrong 20120405 begin */
+/* Add qcom patch to resolve tranparent problem ,case number:00807793 */
 void mdp_set_blend_attr(MDPIBUF *iBuf,
 			uint32 *alpha,
 			uint32 *tpVal,
 			uint32 perPixelAlpha, uint32 *pppop_reg_ptr)
 {
-	if (perPixelAlpha) {
-		*pppop_reg_ptr |= PPP_OP_ROT_ON |
-		    PPP_OP_BLEND_ON | PPP_OP_BLEND_SRCPIXEL_ALPHA;
+	if (mdp_rev == MDP_REV_303) {
+		int bg_alpha;
+
+		*alpha = iBuf->mdpImg.alpha;
+		*tpVal = iBuf->mdpImg.tpVal;
+
+		if (iBuf->mdpImg.mdpOp & MDPOP_FG_PM_ALPHA) {
+			if (perPixelAlpha) {
+				*pppop_reg_ptr |= PPP_OP_ROT_ON |
+						  PPP_OP_BLEND_ON |
+						  PPP_OP_BLEND_CONSTANT_ALPHA;
+			} else {
+				if ((iBuf->mdpImg.mdpOp & MDPOP_ALPHAB)
+					&& (iBuf->mdpImg.alpha == 0xff)) {
+					iBuf->mdpImg.mdpOp &= ~(MDPOP_ALPHAB);
+				}
+
+				if ((iBuf->mdpImg.mdpOp & MDPOP_ALPHAB)
+				   || (iBuf->mdpImg.mdpOp & MDPOP_TRANSP)) {
+
+					*pppop_reg_ptr |= PPP_OP_ROT_ON |
+						PPP_OP_BLEND_ON |
+						PPP_OP_BLEND_CONSTANT_ALPHA |
+						PPP_OP_BLEND_ALPHA_BLEND_NORMAL;
+				}
+			}
+
+			bg_alpha = PPP_BLEND_BG_USE_ALPHA_SEL |
+				PPP_BLEND_BG_ALPHA_REVERSE;
+
+			if (perPixelAlpha) {
+				bg_alpha |= PPP_BLEND_BG_SRCPIXEL_ALPHA;
+			} else {
+				bg_alpha |= PPP_BLEND_BG_CONSTANT_ALPHA;
+				bg_alpha |= iBuf->mdpImg.alpha << 24;
+			}
+			outpdw(MDP_BASE + 0x70010, bg_alpha);
+
+			if (iBuf->mdpImg.mdpOp & MDPOP_TRANSP)
+				*pppop_reg_ptr |= PPP_BLEND_CALPHA_TRNASP;
+		} else if (perPixelAlpha) {
+				*pppop_reg_ptr |= PPP_OP_ROT_ON |
+						  PPP_OP_BLEND_ON |
+						  PPP_OP_BLEND_SRCPIXEL_ALPHA;
+			} else {
+				if ((iBuf->mdpImg.mdpOp & MDPOP_ALPHAB)
+					&& (iBuf->mdpImg.alpha == 0xff)) {
+						iBuf->mdpImg.mdpOp &=
+							~(MDPOP_ALPHAB);
+				}
+
+				if ((iBuf->mdpImg.mdpOp & MDPOP_ALPHAB)
+				   || (iBuf->mdpImg.mdpOp & MDPOP_TRANSP)) {
+					*pppop_reg_ptr |= PPP_OP_ROT_ON |
+						PPP_OP_BLEND_ON |
+						PPP_OP_BLEND_CONSTANT_ALPHA |
+						PPP_OP_BLEND_ALPHA_BLEND_NORMAL;
+				}
+
+				if (iBuf->mdpImg.mdpOp & MDPOP_TRANSP)
+					*pppop_reg_ptr |=
+						PPP_BLEND_CALPHA_TRNASP;
+			}
 	} else {
-		if ((iBuf->mdpImg.mdpOp & MDPOP_ALPHAB)
-		    && (iBuf->mdpImg.alpha == 0xff)) {
-			iBuf->mdpImg.mdpOp &= ~(MDPOP_ALPHAB);
-		}
-
-		if ((iBuf->mdpImg.mdpOp & MDPOP_ALPHAB)
-		    && (iBuf->mdpImg.mdpOp & MDPOP_TRANSP)) {
-			*pppop_reg_ptr |=
-			    PPP_OP_ROT_ON | PPP_OP_BLEND_ON |
-			    PPP_OP_BLEND_CONSTANT_ALPHA |
-			    PPP_OP_BLEND_ALPHA_BLEND_NORMAL |
-			    PPP_BLEND_CALPHA_TRNASP;
-
-			*alpha = iBuf->mdpImg.alpha;
-			*tpVal = iBuf->mdpImg.tpVal;
+		if (perPixelAlpha) {
+			*pppop_reg_ptr |= PPP_OP_ROT_ON |
+			    PPP_OP_BLEND_ON | PPP_OP_BLEND_SRCPIXEL_ALPHA;
 		} else {
-			if (iBuf->mdpImg.mdpOp & MDPOP_TRANSP) {
-				*pppop_reg_ptr |= PPP_OP_ROT_ON |
-				    PPP_OP_BLEND_ON |
-				    PPP_OP_BLEND_SRCPIXEL_TRANSP;
-				*tpVal = iBuf->mdpImg.tpVal;
-			} else if (iBuf->mdpImg.mdpOp & MDPOP_ALPHAB) {
-				*pppop_reg_ptr |= PPP_OP_ROT_ON |
-				    PPP_OP_BLEND_ON |
+			if ((iBuf->mdpImg.mdpOp & MDPOP_ALPHAB)
+			    && (iBuf->mdpImg.alpha == 0xff)) {
+				iBuf->mdpImg.mdpOp &= ~(MDPOP_ALPHAB);
+			}
+
+			if ((iBuf->mdpImg.mdpOp & MDPOP_ALPHAB)
+			    && (iBuf->mdpImg.mdpOp & MDPOP_TRANSP)) {
+				*pppop_reg_ptr |=
+				    PPP_OP_ROT_ON | PPP_OP_BLEND_ON |
+				    PPP_OP_BLEND_CONSTANT_ALPHA |
 				    PPP_OP_BLEND_ALPHA_BLEND_NORMAL |
-				    PPP_OP_BLEND_CONSTANT_ALPHA;
+				    PPP_BLEND_CALPHA_TRNASP;
+
 				*alpha = iBuf->mdpImg.alpha;
+				*tpVal = iBuf->mdpImg.tpVal;
+			} else {
+				if (iBuf->mdpImg.mdpOp & MDPOP_TRANSP) {
+					*pppop_reg_ptr |= PPP_OP_ROT_ON |
+					    PPP_OP_BLEND_ON |
+					    PPP_OP_BLEND_SRCPIXEL_TRANSP;
+					*tpVal = iBuf->mdpImg.tpVal;
+				} else if (iBuf->mdpImg.mdpOp & MDPOP_ALPHAB) {
+					*pppop_reg_ptr |= PPP_OP_ROT_ON |
+					    PPP_OP_BLEND_ON |
+					    PPP_OP_BLEND_ALPHA_BLEND_NORMAL |
+					    PPP_OP_BLEND_CONSTANT_ALPHA;
+					*alpha = iBuf->mdpImg.alpha;
+				}
 			}
 		}
 	}
 }
+/* DTS2012022307519 zhongjinrong 20120405 end >*/

@@ -25,6 +25,10 @@
 #include <linux/time.h>
 #endif
 
+/*< DTS2011041700393 lijianzhao 20110417 begin */
+/* modify for 4125 baseline */
+#include <linux/slab.h>
+/* DTS2011041700393 lijianzhao 20110417 end >*/
 #ifdef __KERNEL__
 #include <linux/ion.h>
 #endif
@@ -188,7 +192,10 @@
 
 #define MSM_CAM_IOCTL_MCTL_DIVERT_DONE \
 	_IOR(MSM_CAM_IOCTL_MAGIC, 52, struct msm_cam_evt_divert_frame *)
-
+/* < DTS2012052201247 tangying 20120522 begin */
+#define MSM_CAM_IOCTL_RESETCAMERA_FOR_ESD \
+	_IOR(MSM_CAM_IOCTL_MAGIC, 88, int *)
+/* DTS2012052201247 tangying 20120522 end > */
 struct msm_mctl_pp_cmd {
 	int32_t  id;
 	uint16_t length;
@@ -205,7 +212,14 @@ struct msm_mctl_post_proc_cmd {
 #define MSM_CAMERA_LED_HIGH 2
 #define MSM_CAMERA_LED_INIT 3
 #define MSM_CAMERA_LED_RELEASE 4
-
+/* < DTS2011072705129     xiangxu 20110728 begin */
+#define MSM_CAMERA_LED_TORCH 5
+/* DTS2011072705129     xiangxu 20110728 end >  */
+/* < DTS2012031301616 tangying 20120313 begin */
+#define MSM_CAMERA_LED_TORCH_LOW    6
+#define MSM_CAMERA_LED_TORCH_MIDDLE 7
+#define MSM_CAMERA_LED_TORCH_HIGH   8
+/* DTS2012031301616 tangying 20120313 end > */
 #define MSM_CAMERA_STROBE_FLASH_NONE 0
 #define MSM_CAMERA_STROBE_FLASH_XENON 1
 
@@ -759,7 +773,15 @@ struct msm_snapshot_pp_status {
 #define CFG_GET_EEPROM_DATA		33
 #define CFG_SET_ACTUATOR_INFO		34
 #define CFG_GET_ACTUATOR_INFO		35
-#define CFG_MAX			36
+/*< DTS2011072801699   songxiaoming 20110728 begin */
+/*lijuan add for AWB OTP*/
+/* DTS2011072801699   songxiaoming 20110728 end > */
+
+/* < DTS2011090701903 zhangyu 20110907 begin */
+#define CFG_SET_NR          37
+#define CFG_RESET           36
+/* DTS2011090701903 zhangyu 20110907 end > */ 
+#define CFG_MAX			38
 
 
 #define MOVE_NEAR	0
@@ -1070,6 +1092,9 @@ struct sensor_cfg_data {
 	union {
 		int8_t effect;
 		uint8_t lens_shading;
+		/* < DTS2011090701903 zhangyu 20110907 begin */
+		uint8_t lut_index;
+		/* DTS2011090701903 zhangyu 20110907 end > */ 
 		uint16_t prevl_pf;
 		uint16_t prevp_pl;
 		uint16_t pictl_pf;

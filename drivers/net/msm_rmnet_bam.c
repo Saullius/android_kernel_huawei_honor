@@ -56,8 +56,12 @@ module_param_named(debug_enable, msm_rmnet_bam_debug_mask,
 /* Configure device instances */
 #define RMNET_DEVICE_COUNT (8)
 
+/* < DTS2012021402296 yuanjintao 20120214 begin */
+#ifndef CONFIG_HUAWEI_KERNEL
 /* allow larger frames */
 #define RMNET_DATA_LEN 2000
+#endif
+/* DTS2012021402296 yuanjintao 20120214 end > */
 
 #define DEVICE_ID_INVALID   -1
 

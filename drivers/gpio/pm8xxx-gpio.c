@@ -433,6 +433,32 @@ int pm8xxx_gpio_config(int gpio, struct pm_gpio *param)
 	return rc;
 }
 EXPORT_SYMBOL(pm8xxx_gpio_config);
+/* <DTS2012041003722 sibingsong 20120410 begin */
+/* < DTS2011102201769 zhangyu 20111025 begin */
+/* Add function pm_gpio_set_value to configure pm gpio */
+void pm8xxx_gpio_set_value( unsigned gpio, int value) 
+{ 
+	int	pm_gpio = -EINVAL; 
+    struct pm_gpio_chip *pm_gpio_chip;
+    struct gpio_chip *gpio_chip;
+
+	mutex_lock(&pm_gpio_chips_lock); 
+    list_for_each_entry(pm_gpio_chip, &pm_gpio_chips, link) {
+		gpio_chip = &pm_gpio_chip->gpio_chip;
+		if (gpio >= gpio_chip->base
+			&& gpio < gpio_chip->base + gpio_chip->ngpio) {
+			pm_gpio = gpio - gpio_chip->base;
+			break;
+		}
+	}
+
+	pm_gpio_write(&pm_gpio_chip->gpio_chip, gpio, value); 
+	mutex_unlock(&pm_gpio_chips_lock); 
+} 
+
+EXPORT_SYMBOL(pm8xxx_gpio_set_value);
+/* DTS2011102201769 zhangyu 20111025 end > */
+/* DTS2012041003722 sibingsong 20120410 end> */
 
 static struct platform_driver pm_gpio_driver = {
 	.probe		= pm_gpio_probe,

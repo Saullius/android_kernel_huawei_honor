@@ -840,8 +840,15 @@ static int marimba_probe(struct i2c_client *client,
 			ssbi_adap = NULL;
 
 		if (!marimba->client) {
+			
+        /* < DTS2011080501353 dingzhipeng 20110805 begin */
+#ifndef CONFIG_HUAWEI_KERNEL
 			dev_err(&marimba->client->dev,
 				"can't attach client %d\n", i);
+#else
+        printk("can't attach client %d\n", i);
+#endif
+        /* DTS2011080501353 dingzhipeng 20110805 end > */
 			status = -ENOMEM;
 			goto fail;
 		}

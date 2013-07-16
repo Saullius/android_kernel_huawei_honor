@@ -56,7 +56,14 @@ enum {
 	UNIXWARE_PARTITION = 0x63,	/* Same as GNU_HURD and SCO Unix */
 };
 
+/*< DTS2011032505860 mazhenhua 20110412 begin*/
+#ifndef CONFIG_HUAWEI_KERNEL
 #define DISK_MAX_PARTS			256
+#else
+#define DISK_MAX_PARTS			32
+#endif
+/*DTS2011032505860 mazhenhua 20110412 end >*/
+
 #define DISK_NAME_LEN			32
 
 #include <linux/major.h>

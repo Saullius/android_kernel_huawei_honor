@@ -29,6 +29,35 @@
 #include <trace/events/irq.h>
 
 #include <asm/irq.h>
+
+/*< DTS2011082200901 genghua 20110822 begin*/
+/* merge qcom DEBUG_CODE for RPC crashes */
+#ifdef CONFIG_HUAWEI_RPC_CRASH_DEBUG
+#include <linux/kernel.h>  
+#include <mach/msm_iomap.h>  
+#include <linux/io.h>
+
+#define TIMESTAMP_ADDR_TMP     (MSM_TMR_BASE + 0x08)
+
+static inline unsigned int softirq_read_timestamp(void)  
+{  
+	unsigned int tick = 0;  
+	tick = readl(TIMESTAMP_ADDR_TMP);  	 
+	return tick;  
+}  
+
+struct softirqs_timestamp {  
+	unsigned int softirq;  
+	uint32_t  ts; 
+	unsigned int state; 
+};  
+
+static struct softirqs_timestamp softirq_ts[128];  
+static int softirq_idx = 0;  
+#endif
+
+/* DTS2011082200901 genghua 20110822 end >*/
+
 /*
    - No shared variables, all the data are CPU local.
    - If a softirq needs serialization, let it serialize itself
@@ -210,7 +239,14 @@ asmlinkage void __do_softirq(void)
 	__u32 pending;
 	int max_restart = MAX_SOFTIRQ_RESTART;
 	int cpu;
-
+	
+	/*< DTS2011082200901 genghua 20110822 begin */
+	/* merge qcom DEBUG_CODE for RPC crashes */
+    #ifdef CONFIG_HUAWEI_RPC_CRASH_DEBUG
+	uint32_t  timetick=0; 
+    #endif
+	/* DTS2011082200901 genghua 20110822 end >*/
+	
 	pending = local_softirq_pending();
 	account_system_vtime(current);
 
@@ -235,7 +271,21 @@ restart:
 			kstat_incr_softirqs_this_cpu(vec_nr);
 
 			trace_softirq_entry(vec_nr);
+			/*< DTS2011082200901 genghua 20110822 begin*/
+			/* merge qcom DEBUG_CODE for RPC crashes */
+            #ifdef CONFIG_HUAWEI_RPC_CRASH_DEBUG
+			timetick = softirq_read_timestamp();  
+			softirq_ts[softirq_idx].softirq=(unsigned int)h;
+			softirq_ts[softirq_idx].ts=timetick; 			
+			softirq_ts[softirq_idx].state=1; 
+            #endif
 			h->action(h);
+            #ifdef CONFIG_HUAWEI_RPC_CRASH_DEBUG
+			softirq_ts[softirq_idx].state=3;
+			softirq_idx = (softirq_idx + 1)%128;	
+            #endif
+			/* DTS2011082200901 genghua 20110822 end >*/
+
 			trace_softirq_exit(vec_nr);
 			if (unlikely(prev_count != preempt_count())) {
 				printk(KERN_ERR "huh, entered softirq %u %s %p"

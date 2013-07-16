@@ -87,6 +87,22 @@
 #define INVALID_SESSION -1
 #define VERSION_KEY_MASK 0xFFFFFF00
 #define MAX_DOWNSCALE_RATIO 3
+/*< DTS2012030300810 liuyuntao 20120330 begin */
+#define ROTATOR_REVISION_V0 0 
+#define ROTATOR_REVISION_V1 1 
+#define ROTATOR_REVISION_V2 2 
+#define ROTATOR_REVISION_NONE 0xffffffff 
+
+uint32_t rotator_hw_revision; 
+ 
+/* 
++ * rotator_hw_revision: 
++ * 0 == 7x30 
++ * 1 == 8x60 
++ * 2 == 8960 
++ * 
++ */ 
+/* DTS2012030300810 liuyuntao 20120330 end >*/
 
 struct tile_parm {
 	unsigned int width;  /* tile's width */
@@ -137,7 +153,11 @@ struct msm_rotator_dev {
 #define COMPONENT_5BITS 1
 #define COMPONENT_6BITS 2
 #define COMPONENT_8BITS 3
-
+/*<DTS2010091402866 penghai 20100920 begin*/
+#ifdef CONFIG_HUAWEI_KERNEL 
+static int Mirror_Flip;
+#endif
+/*DTS2010091402866 penghai 20100920 end>*/
 static struct msm_rotator_dev *msm_rotator_dev;
 
 enum {
@@ -491,8 +511,12 @@ static int msm_rotator_ycxcx_h2v2(struct msm_rotator_img_info *info,
 		return -EINVAL;
 
 	/* rotator expects YCbCr for planar input format */
-	if (info->src.format == MDP_Y_CR_CB_H2V2 ||
-	    info->src.format == MDP_Y_CR_CB_GH2V2)
+	/*< DTS2012030300810 liuyuntao 20120330 begin */
+	/* delete these lines,replace it with below */
+	if ((info->src.format == MDP_Y_CR_CB_H2V2 || 
+	info->src.format == MDP_Y_CR_CB_GH2V2) && 
+	(rotator_hw_revision == ROTATOR_REVISION_V2)) 
+	/* DTS2012030300810 liuyuntao 20120330 end >*/
 		swap(in_chroma_paddr, in_chroma2_paddr);
 
 	iowrite32(in_paddr, MSM_ROTATOR_SRCP0_ADDR);
@@ -1011,6 +1035,15 @@ static int msm_rotator_do_rotate(unsigned long arg)
 		  (msm_rotator_dev->img_info[s]->src.width & 0x1fff),
 		  MSM_ROTATOR_SRC_IMAGE_SIZE);
 
+/*<DTS2010091402866 penghai 20100920 begin*/
+#ifdef CONFIG_HUAWEI_KERNEL 
+/*when camera preview is used, "Mirror_Flip" is set, and overlay fixedly is rotated 270 degrees.*/
+       if(Mirror_Flip)
+       {
+       	msm_rotator_dev->img_info[s]->rotations = MDP_ROT_270;
+       }
+#endif
+/*DTS2010091402866 penghai 20100920 end>*/
 	switch (format) {
 	case MDP_RGB_565:
 	case MDP_BGR_565:
@@ -1070,9 +1103,16 @@ static int msm_rotator_do_rotate(unsigned long arg)
 
 	msm_rotator_dev->processing = 1;
 	iowrite32(0x1, MSM_ROTATOR_START);
-
+/*<DTS2010110304604 penghai 20101112 begin*/
+#ifndef CONFIG_HUAWEI_KERNEL
 	wait_event(msm_rotator_dev->wq,
 		   (msm_rotator_dev->processing == 0));
+#else
+	wait_event_timeout(msm_rotator_dev->wq,
+		   (msm_rotator_dev->processing == 0),
+		   1 *HZ);
+#endif
+/*DTS2010110304604 penghai 20101112 end>*/
 	status = (unsigned char)ioread32(MSM_ROTATOR_INTR_STATUS);
 	if ((status & 0x03) != 0x01)
 		rc = -EFAULT;
@@ -1339,6 +1379,11 @@ msm_rotator_close(struct inode *inode, struct file *filp)
 static long msm_rotator_ioctl(struct file *file, unsigned cmd,
 						 unsigned long arg)
 {
+/*<DTS2010091402866 penghai 20100920 begin*/
+#ifdef CONFIG_HUAWEI_KERNEL 
+	int info;
+#endif
+/*DTS2010091402866 penghai 20100920 end>*/
 	int pid;
 
 	if (_IOC_TYPE(cmd) != MSM_ROTATOR_IOCTL_MAGIC)
@@ -1353,7 +1398,18 @@ static long msm_rotator_ioctl(struct file *file, unsigned cmd,
 		return msm_rotator_do_rotate(arg);
 	case MSM_ROTATOR_IOCTL_FINISH:
 		return msm_rotator_finish(arg);
-
+/*<DTS2010091402866 penghai 20100920 begin*/
+/*add a ioctl macro to get a flag that decide how degrees to rotate*/
+#ifdef CONFIG_HUAWEI_KERNEL
+       case MSM_ROTATOR_IOCTL_MIRROR_FLIP:
+	   	if (copy_from_user(&info, (void __user *)arg, sizeof(int)))
+	   	{
+		return -EFAULT;
+	   	}
+	   	Mirror_Flip = info;
+		return 0;
+#endif
+/*DTS2010091402866 penghai 20100920 end>*/
 	default:
 		dev_dbg(msm_rotator_dev->device,
 			"unexpected IOCTL %d\n", cmd);
@@ -1503,6 +1559,14 @@ static int __devinit msm_rotator_probe(struct platform_device *pdev)
 #endif
 	if (ver != pdata->hardware_version_number)
 		pr_info("%s: invalid HW version\n", DRIVER_NAME);
+	/*< DTS2012030300810 liuyuntao 20120330 begin */
+	rotator_hw_revision = ver; 
+	rotator_hw_revision >>= 16; /* bit 31:16 */ 
+	rotator_hw_revision &= 0xff; 
+
+	pr_info("%s: rotator_hw_revision=%x\n", 
+	__func__, rotator_hw_revision); 
+	/* DTS2012030300810 liuyuntao 20120330 end >*/
 
 	msm_rotator_dev->irq = platform_get_irq(pdev, 0);
 	if (msm_rotator_dev->irq < 0) {

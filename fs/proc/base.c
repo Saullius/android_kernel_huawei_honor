@@ -1693,9 +1693,11 @@ static int proc_pid_readlink(struct dentry * dentry, char __user * buffer, int b
 	struct path path;
 
 	/* Are we allowed to snoop on the tasks file descriptors? */
+/* <DTS2012040903042 tiandazhang 20120409 begin */
+// withdraw the defect DTS2012040300302
 	if (!proc_fd_access_allowed(inode))
 		goto out;
-
+/* DTS2012040903042 tiandazhang 20120409 end> */
 	error = PROC_I(inode)->op.proc_get_link(inode, &path);
 	if (error)
 		goto out;
@@ -2065,8 +2067,11 @@ static struct dentry *proc_fd_instantiate(struct inode *dir,
 	file = fcheck_files(files, fd);
 	if (!file)
 		goto out_unlock;
+    /* <DTS2012040903042 tiandazhang 20120409 begin */
+    // withdraw the defect DTS2012040300302
 	if (file->f_mode & FMODE_READ)
 		inode->i_mode |= S_IRUSR | S_IXUSR;
+    /* DTS2012040903042 tiandazhang 20120409 end> */
 	if (file->f_mode & FMODE_WRITE)
 		inode->i_mode |= S_IWUSR | S_IXUSR;
 	spin_unlock(&files->file_lock);
@@ -2817,7 +2822,10 @@ static const struct inode_operations proc_task_inode_operations;
 
 static const struct pid_entry tgid_base_stuff[] = {
 	DIR("task",       S_IRUGO|S_IXUGO, proc_task_inode_operations, proc_task_operations),
+    /* <DTS2012040903042 tiandazhang 20120409 begin */
+    // withdraw the defect DTS2012040300302
 	DIR("fd",         S_IRUSR|S_IXUSR, proc_fd_inode_operations, proc_fd_operations),
+    /* DTS2012040903042 tiandazhang 20120409 end> */
 	DIR("fdinfo",     S_IRUSR|S_IXUSR, proc_fdinfo_inode_operations, proc_fdinfo_operations),
 	DIR("ns",	  S_IRUSR|S_IXUGO, proc_ns_dir_inode_operations, proc_ns_dir_operations),
 #ifdef CONFIG_NET

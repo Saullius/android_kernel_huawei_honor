@@ -143,9 +143,15 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 	 * this pass.
 	 *
 	 */
+/*< DTS2011033002913 mazhenhua 20110326 add for patch begin */
+/*< DTS2011032505892 mazhenhua 20110326 add for patch begin */
 	if (lowmem_deathpending &&
-	    time_before_eq(jiffies, lowmem_deathpending_timeout))
+	    time_before_eq(jiffies, lowmem_deathpending_timeout)) {
+/*DTS2011032505892 mazhenhua  20110326 add for patch end >*/
+		lowmem_print(3, "lowmem break \n");
 		return 0;
+	}
+/*DTS2011033002913 mazhenhua  20110326 add for patch end >*/
 
 	if (lowmem_adj_size < array_size)
 		array_size = lowmem_adj_size;

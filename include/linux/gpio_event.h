@@ -136,8 +136,10 @@ struct gpio_event_output_info {
 	const struct gpio_event_direct_entry *keymap;
 	size_t keymap_size;
 };
-
-
+/* < DTS2012022000736 zhangmin 20120220 begin */
+/*return slide status*/
+int get_slide_pressed(void);
+/* DTS2012022000736 zhangmin 20120220 end > */ 
 /* axes */
 
 enum gpio_event_axis_flags {

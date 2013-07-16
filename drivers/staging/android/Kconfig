@@ -92,4 +92,11 @@ config ANDROID_LOW_MEMORY_KILLER
 
 endif # if ANDROID
 
+#/* <DTS2010073003167  liujinggang 20100818 begin */
+config HUAWEI_FEATURE_NV_LOG_CONTROL
+	tristate "Android LOG"
+	depends on HUAWEI_KERNEL
+	default n
+#/* DTS2010073003167 liujinggang 20100818 end > */
+
 endmenu

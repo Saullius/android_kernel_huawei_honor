@@ -51,4 +51,18 @@ struct QMI_QOS_HDR_S {
 	unsigned long    flow_id;
 };
 
+/* < DTS2012021402296 yuanjintao 20120214 begin */
+#ifdef CONFIG_HUAWEI_KERNEL
+/*
+ * set the default MTU to 1500, keep the same with U8652 (DTS2011071805506 )
+ * if there have special requirement need to apply.
+ */
+ #define RMNET_DEFAULT_MAX_MTU 1500
+
+int rmnet_get_max_mtu(void);
+
+#define RMNET_DATA_LEN (rmnet_get_max_mtu())
+#endif
+/* DTS2012021402296 yuanjintao 20120214 end > */
+
 #endif /* _MSM_RMNET_H_ */

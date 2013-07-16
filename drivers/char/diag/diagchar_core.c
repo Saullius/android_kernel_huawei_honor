@@ -27,6 +27,11 @@
 #include "diagmem.h"
 #include "diagchar.h"
 #include "diagfwd.h"
+/* < DTS2010112904779 liuhongfei 20101129 begin */           	            
+#ifdef CONFIG_HUAWEI_FEATURE_PHUDIAG
+#include "phudiagchar.h"
+#endif
+/* DTS2010112904779 liuhongfei 20101129 end > */ 
 #include "diagfwd_cntl.h"
 #ifdef CONFIG_DIAG_SDIO_PIPE
 #include "diagfwd_sdio.h"
@@ -1025,6 +1030,13 @@ static int __init diagchar_init(void)
 		driver->mask_check = 0;
 		mutex_init(&driver->diagchar_mutex);
 		init_waitqueue_head(&driver->wait_q);
+		/* < DTS2010112904779 liuhongfei 20101129 begin */           	            
+		#ifdef CONFIG_HUAWEI_FEATURE_PHUDIAG
+		printk(KERN_INFO "Entering phudiag ..\n");
+		phudiag_init();
+		printk(KERN_INFO "diagchar initialized!\n");
+		#endif
+		/* DTS2010112904779 liuhongfei 20101129 end > */ 
 		INIT_WORK(&(driver->diag_drain_work), diag_drain_work_fn);
 		INIT_WORK(&(driver->diag_read_smd_work), diag_read_smd_work_fn);
 		INIT_WORK(&(driver->diag_read_smd_cntl_work),
@@ -1084,6 +1096,11 @@ static void __exit diagchar_exit(void)
 	 ensure no memory leaks */
 	diagmem_exit(driver, POOL_TYPE_ALL);
 	diagfwd_exit();
+	/* < DTS2010112904779 liuhongfei 20101129 begin */           	            
+	#ifdef CONFIG_HUAWEI_FEATURE_PHUDIAG
+	phudiag_exit();
+	#endif
+	/* DTS2010112904779 liuhongfei 20101129 end > */ 
 	diagfwd_cntl_exit();
 	diag_sdio_fn(EXIT);
 	diag_hsic_fn(EXIT);

@@ -103,7 +103,10 @@ struct vmcore {
 #ifdef CONFIG_PROC_FS
 
 extern void proc_root_init(void);
-
+/* < DTS2012020902104 zhangmin 20120209 begin */
+/*DELETE #ifdef CONFIG_HUAWEI_KERNEL */
+extern void  proc_app_info_init(void);
+/* DTS2012020902104 zhangmin 20120209 end > */
 void proc_flush_task(struct task_struct *task);
 
 extern struct proc_dir_entry *create_proc_entry(const char *name, mode_t mode,

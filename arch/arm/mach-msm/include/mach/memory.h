@@ -37,7 +37,13 @@
 
 #define EBI0_PHYS_OFFSET PHYS_OFFSET
 #define EBI0_PAGE_OFFSET PAGE_OFFSET
+/* < DTS2011091305498 fangxinyong 20110927 begin */
+/* modified for 1G ddr memory support */
+/*< DTS2012050806485 hujun 20120510 begin*/
+/*revert 1G memory modification*/
 #define EBI0_SIZE 0x10000000
+/* DTS2012050806485 hujun 20120510  end >*/
+/* DTS2011091305498 fangxinyong 20110927 end > */
 
 #define EBI1_PHYS_OFFSET 0x40000000
 #define EBI1_PAGE_OFFSET (EBI0_PAGE_OFFSET + EBI0_SIZE)
@@ -57,6 +63,36 @@
 #endif
 
 #endif
+
+/* < DTS2012022004105 fangxinyong 20120220 begin */
+/* merge from DTS2012020205949
+ * In 7x27A we use flatmem mode, but this will lead VMALLOC area limit to 160M,
+ *  This memory config will case low performance for GPU.
+ *  So we do a trick, we reconstruct __phys_to_virt() and __phys_to_virt() to solve
+ *  the phy memory gap between CS0 CS1 in EBI1,just like sparsemem config in 7x30
+ */
+#if defined(CONFIG_HUAWEI_KERNEL)
+#if defined(CONFIG_ARCH_MSM7X27A)
+#define CS0_PHYS_OFFSET PHYS_OFFSET
+#define CS0_PAGE_OFFSET PAGE_OFFSET
+#define CS0_SIZE 0x10000000
+
+#define CS1_PHYS_OFFSET 0x20000000
+#define CS1_PAGE_OFFSET (CS0_PAGE_OFFSET + CS0_SIZE)
+
+#define __phys_to_virt(phys)				\
+    ((phys) >= CS1_PHYS_OFFSET ?			\
+    (phys) - CS1_PHYS_OFFSET + CS1_PAGE_OFFSET :	\
+    (phys) - CS0_PHYS_OFFSET + CS0_PAGE_OFFSET)
+
+#define __virt_to_phys(virt)				\
+    ((virt) >= CS1_PAGE_OFFSET ?			\
+    (virt) - CS1_PAGE_OFFSET + CS1_PHYS_OFFSET :	\
+    (virt) - CS0_PAGE_OFFSET + CS0_PHYS_OFFSET)
+
+#endif
+#endif
+/* DTS2012022004105 fangxinyong 20120220 end > */
 
 #ifndef __ASSEMBLY__
 void *alloc_bootmem_aligned(unsigned long size, unsigned long alignment);

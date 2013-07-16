@@ -978,7 +978,15 @@ asmlinkage int vprintk(const char *fmt, va_list args)
 
 				t = cpu_clock(printk_cpu);
 				nanosec_rem = do_div(t, 1000000000);
+                /* <DTS2010071902568 hufeng 20100719 begin */
+				/*<BU5D06612 qinwei 20100330 begin */
+#ifndef CONFIG_HUAWEI_KERNEL
 				tlen = sprintf(tbuf, "[%5lu.%06lu] ",
+#else
+				tlen = sprintf(tbuf, "[%d, %s] [%5lu.%06lu] ", current->pid, current->comm,
+#endif
+				/*BU5D06612 qinwei 20100330 end >*/
+                /* DTS2010071902568 hufeng 20100719 end> */
 						(unsigned long) t,
 						nanosec_rem / 1000);
 

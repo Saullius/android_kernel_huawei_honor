@@ -370,6 +370,15 @@ struct i2c_adapter {
 
 	struct mutex userspace_clients_lock;
 	struct list_head userspace_clients;
+
+	/*< DTS2012021003176 yanzhijun 20120210 begin */
+	/* merge DTS2011110800980 fangxinyong  */
+#ifdef CONFIG_HUAWEI_I2C_DEBUG_TOOL
+    u8 bus_debug_flag;
+    unsigned short debug_addr;
+#endif
+	/* DTS2012021003176 yanzhijun 20120210 end >*/ 
+
 };
 #define to_i2c_adapter(d) container_of(d, struct i2c_adapter, dev)
 
@@ -433,6 +442,13 @@ extern int i2c_add_numbered_adapter(struct i2c_adapter *);
 
 extern int i2c_register_driver(struct module *, struct i2c_driver *);
 extern void i2c_del_driver(struct i2c_driver *);
+
+/*< DTS2012021003176 yanzhijun 20120210 begin */
+/* merge DTS2011110800980 fangxinyong  */
+#ifdef CONFIG_HUAWEI_I2C_DEBUG_TOOL
+extern int i2c_dbg_transfer(void);
+#endif
+/* DTS2012021003176 yanzhijun 20120210 end >*/ 
 
 static inline int i2c_add_driver(struct i2c_driver *driver)
 {

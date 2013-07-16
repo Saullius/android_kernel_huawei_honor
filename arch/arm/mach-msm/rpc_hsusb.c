@@ -608,6 +608,10 @@ int usb_diag_update_pid_and_serial_num(uint32_t pid, const char *snum)
 		ret = msm_hsusb_is_serial_num_null(1);
 		if (ret)
 			return ret;
+		/*< DTS2011041700393 lijianzhao 20110417 begin */
+		/* fixup qcom bug by yanzhijun 20110420 */
+		return 0;
+		/* DTS2011041700393 lijianzhao 20110417 end >*/
 	}
 
 	ret = msm_hsusb_is_serial_num_null(0);

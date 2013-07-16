@@ -122,7 +122,19 @@ source "drivers/xen/Kconfig"
 
 source "drivers/staging/Kconfig"
 
+# /* < DTS2011042602168 caomingxing 20110426 begin */
+# /*< DTS2011011904316 genghua 20110121 begin */
+source "drivers/nfc/Kconfig"
+# /* DTS2011011904316 genghua 20110121 end >*/
+# /* DTS2011042602168 caomingxing 20110426 end > */
+
 source "drivers/platform/Kconfig"
+# /* < DTS2011052606009 jiaxianghong 20110527 begin */
+# /* <DTS2011032104626 shenjinming 20110321 begin */
+source "drivers/devdetect/Kconfig"
+# /* <DTS2011032104626 shenjinming 20110321 end> */
+# /* < DTS2011052606009 jiaxianghong 20110527 end */
+
 
 source "drivers/clk/Kconfig"
 

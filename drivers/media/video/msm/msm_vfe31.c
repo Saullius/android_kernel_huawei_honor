@@ -21,9 +21,26 @@
 
 #include "msm_vfe31.h"
 #include "msm_vpe1.h"
+/* < DTS2012060800122  wangrui 20120608 begin */
+/* remove temporary modification */
+/* < DTS2012050902315  wangrui 20120604 begin */
+/* DTS2012050902315  wangrui 20120604 end > */
+/* DTS2012060800122  wangrui 20120608 end > */
 
 atomic_t irq_cnt;
 
+/*<DTS2010123001147 penghai 20101230 begin*/
+#ifdef CONFIG_HUAWEI_KERNEL
+#define RECORDING_ON 1
+#define RECORDING_OFF 0
+#define PREVIOUS_FRAME_IS_PREVIEW 0
+#define PREVIOUS_FRAME_IS_RECORDING 1
+/*when init, recording is off*/
+static uint32_t recording_flag = RECORDING_OFF;
+/*when init, previous frame is recording because the start preview frame can not be removed*/
+static uint32_t recording_frame_flag = PREVIOUS_FRAME_IS_RECORDING;
+#endif
+/*DTS2010123001147 penghai 20101230 end>*/
 #define CHECKED_COPY_FROM_USER(in) {					\
 	if (copy_from_user((in), (void __user *)cmd->value,		\
 			cmd->length)) {					\
@@ -1148,6 +1165,13 @@ static void vfe31_start_common(void)
 
 static int vfe31_start_recording(void)
 {
+	/*<DTS2010123001147 penghai 20101230 begin*/
+	#ifdef CONFIG_HUAWEI_KERNEL
+	/*when start recording, init recording_flag and recording_frame_flag*/
+	recording_flag = RECORDING_ON;
+	recording_frame_flag = PREVIOUS_FRAME_IS_RECORDING;
+	#endif
+	/*DTS2010123001147 penghai 20101230 end>*/
 	msm_camio_set_perf_lvl(S_VIDEO);
 	usleep(1000);
 	vfe31_ctrl->recording_state = VFE_REC_STATE_START_REQUESTED;
@@ -1157,6 +1181,15 @@ static int vfe31_start_recording(void)
 
 static int vfe31_stop_recording(void)
 {
+	/* < DTS2011081301650 liwei 20110813 begin */
+	/*<DTS2010123001147 penghai 20101230 begin*/
+	#ifdef CONFIG_HUAWEI_KERNEL
+	/*when stop recording, deinit recording_flag and recording_frame_flag*/
+	recording_flag = RECORDING_OFF;
+	recording_frame_flag = PREVIOUS_FRAME_IS_RECORDING;
+	#endif
+	/*DTS2010123001147 penghai 20101230 end>*/
+	/* DTS2011081301650 liwei 20110813 end > */
 	vfe31_ctrl->recording_state = VFE_REC_STATE_STOP_REQUESTED;
 	msm_io_w_mb(1, vfe31_ctrl->vfebase + VFE_REG_UPDATE_CMD);
 	msm_camio_set_perf_lvl(S_PREVIEW);
@@ -3154,6 +3187,12 @@ static void vfe31_process_output_path_irq_2(uint32_t ping_pong)
 		free_buf->paddr + free_buf->cbcr_off);
 		kfree(free_buf);
 		vfe_send_outmsg(MSG_ID_OUTPUT_V, pyaddr, pcbcraddr);
+		/*<DTS2010123001147 penghai 20101230 begin*/
+		#ifdef CONFIG_HUAWEI_KERNEL
+		/*when process, set recording_frame_flag for PREVIOUS_FRAME_IS_RECORDING*/
+		recording_frame_flag = PREVIOUS_FRAME_IS_RECORDING;
+		#endif
+		/*DTS2010123001147 penghai 20101230 end>*/
 	} else {
 		vfe31_ctrl->outpath.out2.frame_drop_cnt++;
 		pr_warning("path_irq_2 - no free buffer!\n");
@@ -3556,7 +3595,13 @@ static irqreturn_t vfe31_parse_irq(int irq_num, void *data)
 	spin_unlock_irqrestore(&vfe31_ctrl->xbar_lock, flags);
 	CDBG("vfe_parse_irq: Irq_status0 = 0x%x, Irq_status1 = 0x%x.\n",
 		irq.vfeIrqStatus0, irq.vfeIrqStatus1);
-
+		
+    /* < DTS2012060800122  wangrui 20120608 begin */
+    /* remove temporary modification */
+    /* < DTS2012050902315  wangrui 20120604 begin */
+    /* DTS2012050902315  wangrui 20120604 end > */
+    /* DTS2012060800122  wangrui 20120608 end > */
+	
 	qcmd->vfeInterruptStatus0 = irq.vfeIrqStatus0;
 	qcmd->vfeInterruptStatus1 = irq.vfeIrqStatus1;
 	qcmd->vfePingPongStatus = irq.vfePingPongStatus;

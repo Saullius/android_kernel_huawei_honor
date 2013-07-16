@@ -215,6 +215,44 @@ int msm_dmov_exec_cmd(unsigned id, unsigned int cmdptr);
 #define DMOV_NAND_CRCI_CMD    5
 #define DMOV_NAND_CRCI_DATA   4
 
+/*< DTS2012052308313 chendeng 20120621 begin */
+/* 
+ * Separate the DMA channel of eMMC, sd card and WIFI.
+ * Fix the DMA flushing destroy ext4 file system issue.
+ */
+#ifdef CONFIG_HUAWEI_KERNEL
+#ifdef CONFIG_ARCH_MSM7X27A
+/* Assign NO.10 DMA channel to SD card. */
+#define DMOV_SDC1_CHAN        10
+#define DMOV_SDC1_CRCI        6
+
+/* Assign NO.7 DMA channel to WIFI. */
+#define DMOV_SDC2_CHAN        7
+#define DMOV_SDC2_CRCI        7
+
+/* Assign NO.8 DMA channel to eMMC. */
+#define DMOV_SDC3_CHAN        8
+#define DMOV_SDC3_CRCI        12
+
+#define DMOV_SDC4_CHAN        8
+#define DMOV_SDC4_CRCI        13
+#elif defined(CONFIG_ARCH_MSM7X30)
+#define DMOV_SDC1_CHAN        8
+#define DMOV_SDC1_CRCI        6
+
+/* Assign NO.7 DMA channel to eMMC. */
+#define DMOV_SDC2_CHAN        7
+#define DMOV_SDC2_CRCI        7
+
+/* Assign NO.8 DMA channel to WIFI. */
+#define DMOV_SDC3_CHAN        8
+#define DMOV_SDC3_CRCI        12
+
+/* Assign NO.8 DMA channel to SD card. */
+#define DMOV_SDC4_CHAN        8
+#define DMOV_SDC4_CRCI        13
+#endif
+#else
 #define DMOV_SDC1_CHAN        8
 #define DMOV_SDC1_CRCI        6
 
@@ -226,6 +264,8 @@ int msm_dmov_exec_cmd(unsigned id, unsigned int cmdptr);
 
 #define DMOV_SDC4_CHAN        8
 #define DMOV_SDC4_CRCI        13
+#endif
+/* DTS2012052308313 chendeng 20120621 end>*/
 
 #define DMOV_TSIF_CHAN        10
 #define DMOV_TSIF_CRCI        10

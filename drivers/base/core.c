@@ -26,6 +26,16 @@
 #include "base.h"
 #include "power/power.h"
 
+/* < DTS2011111003569 fangxinyong 20111110 begin */
+#ifdef CONFIG_HUAWEI_KERNEL_DEBUG
+#define DBG(format, arg...) do { \
+    printk(KERN_DEBUG "%s: " format "\n" , __func__ , ## arg); \
+} while (0)
+#else
+#define DBG(format, arg...) do { } while (0)
+#endif
+/* DTS2011111003569 fangxinyong 20111110 end > */
+
 #ifdef CONFIG_SYSFS_DEPRECATED
 #ifdef CONFIG_SYSFS_DEPRECATED_V2
 long sysfs_deprecated = 1;
@@ -1726,7 +1736,16 @@ void device_shutdown(void)
 {
 	struct device *dev;
 
+    /* < DTS2011111003569 fangxinyong 20111110 begin */
+    DBG("begin");
+    /* DTS2011111003569 fangxinyong 20111110 end > */
+
 	spin_lock(&devices_kset->list_lock);
+
+    /* < DTS2011111003569 fangxinyong 20111110 begin */
+    DBG("has get the spin_lock");
+    /* DTS2011111003569 fangxinyong 20111110 end > */
+
 	/*
 	 * Walk the devices list backward, shutting down each in turn.
 	 * Beware that device unplug events may also start pulling
@@ -1735,6 +1754,11 @@ void device_shutdown(void)
 	while (!list_empty(&devices_kset->list)) {
 		dev = list_entry(devices_kset->list.prev, struct device,
 				kobj.entry);
+
+        /* < DTS2011111003569 fangxinyong 20111110 begin */
+        DBG("dev name = %s", dev->kobj.name);
+        /* DTS2011111003569 fangxinyong 20111110 end > */
+        
 		get_device(dev);
 		/*
 		 * Make sure the device is off the kset list, in the
@@ -1755,7 +1779,16 @@ void device_shutdown(void)
 		spin_lock(&devices_kset->list_lock);
 	}
 	spin_unlock(&devices_kset->list_lock);
+
+    /* < DTS2011111003569 fangxinyong 20111110 begin */
+    DBG("before async_synchronize_full()");
+    /* DTS2011111003569 fangxinyong 20111110 end > */
+    
 	async_synchronize_full();
+
+    /* < DTS2011111003569 fangxinyong 20111110 begin */
+    DBG("end");
+    /* DTS2011111003569 fangxinyong 20111110 end > */
 }
 
 /*
