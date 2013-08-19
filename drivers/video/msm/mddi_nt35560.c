@@ -787,7 +787,7 @@ static int __init nt35560_init(void)
 	{
 		pinfo = &nt35560_panel_data.panel_info;
 		pinfo->xres = 480;
-		pinfo->yres = 864;
+		pinfo->yres = 854;
 		pinfo->type = MDDI_PANEL;
 		pinfo->pdest = DISPLAY_1;
 		pinfo->mddi.vdopkt = MDDI_DEFAULT_PRIM_PIX_ATTR;
